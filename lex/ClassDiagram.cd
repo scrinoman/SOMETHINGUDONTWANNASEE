@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="CLexerInput">
+    <Position X="3.5" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEgAAAACAgAAAAAAAACAACAAQAAEAAAAAEABBAAIAA=</HashCode>
+      <FileName>LexerInput.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ILiteralGetter">
+    <Position X="1.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAABAAAAgAAAAAACAAAAAAAAAAAAAAAAAEABAAAAA=</HashCode>
+      <FileName>LiteralGetter.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CStringInput">
+    <Position X="0.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAhAEAgAAAAAAAAAEAAAAgAAAAAAAAAAABAAAAA=</HashCode>
+      <FileName>StringInput.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="Token">
+    <Position X="5.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAACABAAAAAAAAAAABAAA=</HashCode>
+      <FileName>Lexer.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="TokenGroup">
+    <Position X="7" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAAAAAAAAAACACAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Lexer.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="TokenLine">
+    <Position X="7" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAgA=</HashCode>
+      <FileName>Lexer.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Typedef Name="TokenTable" Collapsed="true">
+    <Position X="5.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Lexer.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
