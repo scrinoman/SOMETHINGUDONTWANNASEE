@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{E108563B-5487-4892-B3F7-B2A632C5CCAA}</ProjectGuid>
+    <ProjectGuid>{39054690-335F-4210-870D-C505BB9CDFF3}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>lex</RootNamespace>
+    <RootNamespace>compiler</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -52,6 +52,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\lex_dll;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -67,7 +68,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <ShowIncludes>true</ShowIncludes>
+      <AdditionalIncludeDirectories>$(SolutionDir)\lex_dll;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -80,32 +81,20 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Lexer.h" />
-    <ClInclude Include="LexerInput.h" />
-    <ClInclude Include="LiteralGetter.h" />
-    <ClInclude Include="ReservedTokens.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="StringInput.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="TokenAutomata.h" />
-    <ClInclude Include="TokenFunc.h" />
-    <ClInclude Include="TokenType.h" />
-    <ClInclude Include="TokenTypeString.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="lex.cpp" />
-    <ClCompile Include="Lexer.cpp" />
-    <ClCompile Include="LexerInput.cpp" />
-    <ClCompile Include="LiteralGetter.cpp" />
+    <ClCompile Include="compiler.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="StringInput.cpp" />
-    <ClCompile Include="TokenAutomata.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
+    <ProjectReference Include="..\lex_dll\lex_dll.vcxproj">
+      <Project>{c1abb094-71c2-4008-8d4a-43701911c801}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

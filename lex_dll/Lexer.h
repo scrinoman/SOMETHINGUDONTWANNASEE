@@ -1,9 +1,10 @@
 #pragma once
 #include "stdafx.h"
+#include "lex_dll.h"
 #include "TokenType.h"
 #include "TokenTypeString.h"
 
-struct Token
+struct LEX_DLL_API Token
 {
 	std::string tokenString;
 	TokenType type;
@@ -27,7 +28,7 @@ struct TokenGroup
 	}
 };
 
-struct TokenLine
+struct LEX_DLL_API TokenLine
 {
 	std::vector<Token> tokens;
 	size_t row;
@@ -38,5 +39,5 @@ struct TokenLine
 	}
 };
 
-typedef std::vector<TokenLine> TokenTable;
-TokenTable ParseFile(const std::string &fNameInput);
+typedef LEX_DLL_API std::vector<TokenLine> TokenTable;
+LEX_DLL_API TokenTable ParseFile(const std::string &fNameInput);

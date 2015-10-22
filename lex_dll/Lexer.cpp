@@ -147,7 +147,7 @@ vector<Token> RecognizeTokens(const string &token)
 	return res;
 }
 
-TokenTable ParseFile(const string &fNameInput)
+LEX_DLL_API TokenTable ParseFile(const string &fNameInput)
 {
 	TokenTable result;
 	CLexerInput lexer(fNameInput);

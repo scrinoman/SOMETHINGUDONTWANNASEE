@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "Lexer.h"
 #include "TokenAutomata.h"
-#include "TokenTypeString.h"
 
 using namespace std;
 
@@ -80,7 +79,7 @@ void OutputResult(const string &fNameOutput, const TokenTable &table)
 	{
 		for (auto &token : table[i].tokens)
 		{
-			fprintf(fout, "%u %s %s\n", table[i].row, tokenString[token.type].c_str(), token.tokenString.c_str());
+			fprintf(fout, "%u %s %s\n", table[i].row, token.strType.c_str(), token.tokenString.c_str());
 		}
 	}
 
