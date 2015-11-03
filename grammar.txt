@@ -34,5 +34,5 @@
 <else> -> $ | else { <explist> }
 <cond_expr> -> <cond_part> <ravage>
 <ravage> -> <cond_op> <cond_part> <ravage> | $
-<cond_part> -> ( <cond_expr> ) | <const> | <left_part>
+<cond_part> -> <right_part> | ! <cond_expr> (; изменения тут <-;)
 <const> -> <const_int> | <const_string> | <const_float> | <const_char>

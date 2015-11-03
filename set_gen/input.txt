@@ -102,8 +102,8 @@ right_part ( const id -
 all_left_parts ( const id -
 rp + - * / & | % ) ] ;
 
-rp + - * / & | %
-rp ) ] ;
+rp + - * / & | % (+ добавляются все операторы условия )
+rp ) ] ; (+ добавляется })
 bin_op + - * / & | %
 all_left_parts ( const id -
 rp + - * / & | % ) ] ;
@@ -251,22 +251,21 @@ else else
 explist int string char float id cin cout while if for return map
 } }
 
-cond_expr ( const id
-cond_part ( const id
+cond_expr ( const id - !
+cond_part ( const id - !
 ravage > < != == && || <= >= ) ;
 
 ravage > < != == && || <= >=
 ravage ) ;
 cond_op > < != == && || <= >=
-cond_part ( const id
+cond_part ( const id - !
 ravage > < != == && || <= >= ) ;
 empty ) ;
 
-cond_part (
-cond_part const
-cond_part id
-( (
-cond_expr ( const id
-) )
-const const
-left_part id
+cond_part ( const id -
+cond_part !
+right_part ( - const id
+! !
+cond_expr ( const id - !
+
+(Поменяны конды)
