@@ -1,0 +1,272 @@
+code void int string char float
+func void int string char float
+other_code void int string char float 
+
+other_code void int string char float 
+code void int string char float
+
+func void int string char float
+return_type int string char float
+id id
+( (
+idlist ) int string char float
+) )
+{ {
+explist int string char float id cin cout while if for return map
+} }
+
+return_type void 
+return_type int string char float
+void void
+var_type int string char float
+
+var_type int 
+var_type string
+var_type char
+var_type float
+int int
+string string
+char char
+float float
+
+id_decl int string char float
+var_type int string char float
+id id
+array_decl , = ) ; + - * / & | % < > == != >= <= && || ] [
+
+array_decl , = ) ; + - * / & | % < > == != >= <= && || ]
+array_decl [
+empty , = ) ; + - * / & | % < > == != >= <= && || ] [
+[ [
+right_part ( const id -
+] ]
+
+idlist int string char float
+idlist )
+id_decl int string char float
+other_decl , )
+empty )
+
+other_decl ,
+other_decl )
+, ,
+id_decl int string char float
+other_decl , )
+empty )
+
+explist int string char float id cin cout while if for return map
+expression int string char float id cin cout while if for return map
+other_exp int string char float id cin cout while if for return map }
+
+other_exp int string char float id cin cout while if for return map
+other_exp }
+explist int string char float id cin cout while if for return map
+empty }
+
+expression int string char float map
+expression id
+expression cin cout
+expression while for
+expression if
+expression return
+decl_action int string char float map
+op_action id
+io_call cin cout
+cycle while for
+condition if
+return_call return
+
+decl_action int string char float map
+decl_left int string char float map
+decl_right ( id const ;
+; ;
+
+decl_left int string char float
+decl_left map
+id_decl int string char float
+map_decl map
+
+map_decl map
+map map
+< <
+var_type int string char float
+> >
+id id
+
+decl_right ( id const
+decl_right ;
+right_part ( const id -
+empty ;
+
+right_part ( const id -
+all_left_parts ( const id -
+rp + - * / & | % ) ] ;
+
+rp + - * / & | %
+rp ) ] ;
+bin_op + - * / & | %
+all_left_parts ( const id -
+rp + - * / & | % ) ] ;
+empty ) ] ;
+
+all_left_parts const
+all_left_parts ( id -
+const const
+complex_part - ( id
+
+complex_part - ( id
+start - ( id
+main_part ( id
+
+start ( id
+start -
+empty ( id
+- -
+
+main_part (
+main_part id
+( (
+right_part ( const id -
+) )
+left_part id
+
+op_action id
+left_part id
+= =
+right_part ( const id -
+; ;
+
+io_call cin
+io_call cout
+cin cin
+>> >>
+left_part id
+; ;
+cout cout
+<< <<
+right_part ( const id -
+; ;
+
+left_part id
+id id
+next_part , = ) ; + - * / & | % < > == != >= <= && || ] [ (
+
+next_part (
+next_part , = ) ; + - * / & | % < > == != >= <= && || ] [
+( (
+func_list ) id
+) )
+array_decl , = ) ; + - * / & | % < > == != >= <= && || ] [
+
+func_list )
+func_list id
+empty )
+left_part id
+other_func_list ) ,
+
+other_func_list )
+other_func_list ,
+empty )
+, ,
+left_part id
+other_func_list ) ,
+
+bin_op +
+bin_op -
+bin_op *
+bin_op /
+bin_op &
+bin_op |
+bin_op %
++ +
+- -
+* *
+/ /
+& &
+| |
+% %
+
+return_call return
+return return
+right_part ( const id -
+; ;
+
+cycle while
+cycle for
+while while
+( (
+cond_expr ( const id
+) )
+{ {
+explist int string char float id cin cout while if for return map
+} }
+for for
+( (
+id_decl int string char float
+= =
+right_part ( const id -
+; ;
+cond_expr ( const id
+; ;
+id id
+= =
+right_part ( const id -
+) )
+{ {
+explist int string char float id cin cout while if for return map
+} }
+
+cond_op >
+cond_op <
+cond_op !=
+cond_op ==
+cond_op &&
+cond_op ||
+cond_op <=
+cond_op >=
+> >
+< <
+!= !=
+== ==
+&& &&
+|| ||
+<= <=
+>= >=
+
+condition if
+if if
+( (
+cond_expr ( const id
+) )
+{ {
+explist int string char float id cin cout while if for return map
+} }
+else } int string char float id cin cout while if for return map else
+
+else } int string char float id cin cout while if for return map
+else else
+empty } int string char float id cin cout while if for return map 
+else else
+{ {
+explist int string char float id cin cout while if for return map
+} }
+
+cond_expr ( const id
+cond_part ( const id
+ravage > < != == && || <= >= ) ;
+
+ravage > < != == && || <= >=
+ravage ) ;
+cond_op > < != == && || <= >=
+cond_part ( const id
+ravage > < != == && || <= >= ) ;
+empty ) ;
+
+cond_part (
+cond_part const
+cond_part id
+( (
+cond_expr ( const id
+) )
+const const
+left_part id

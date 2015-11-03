@@ -3,21 +3,22 @@
 #include "TokenType.h"
 
 static std::map<TokenType, std::string> tokenStringName = {
-	//{ TokenType::WIDE_CHAR, "WIDE_CHAR" },
-	//{ TokenType::T_CHAR, "T_CHAR" },
-	//{ TokenType::AUTO, "AUTO"},
+	/*{ TokenType::WIDE_CHAR, "WIDE_CHAR" },
+	{ TokenType::T_CHAR, "T_CHAR" },
+	{ TokenType::AUTO, "AUTO"},
 	{ TokenType::BREAK, "BREAK"},
-	//{ TokenType::CASE, "CASE"},
+	{ TokenType::CASE, "CASE"},*/
 	{ TokenType::CHAR, "CHAR" },
 	{ TokenType::CIN, "CIN" },
 	{ TokenType::COUT, "COUT" },
 	{ TokenType::MAP, "MAP" },
-	{ TokenType::CONST, "CONST" },
+	{ TokenType::STR, "STRING" },
+	/*{ TokenType::CONST, "CONST" },
 	{ TokenType::CONTINUE, "CONTINUE" },
-	/*{ TokenType::DEFAULT, "DEFAULT" },
+	{ TokenType::DEFAULT, "DEFAULT" },
 	{ TokenType::DECLTYPE, "DECLTYPE" },
-	{ TokenType::DO, "DO" },*/
-	{ TokenType::DOUBLE, "DOUBLE"},
+	{ TokenType::DO, "DO" },
+	{ TokenType::DOUBLE, "DOUBLE"},*/
 	{ TokenType::ELSE, "ELSE" },
 	/*{ TokenType::ENUM, "ENUM" },
 	{ TokenType::EXTERN, "EXTERN" },
@@ -50,9 +51,9 @@ static std::map<TokenType, std::string> tokenStringName = {
 	{ TokenType::TRY, "TRY" },
 	{ TokenType::UNION, "UNION" },
 	{ TokenType::UNSIGNED, "UNSIGNED" },
-	{ TokenType::USING, "USING" },
+	{ TokenType::USING, "USING" },*/
 	{ TokenType::VOID, "VOID" },
-	{ TokenType::VOLATILE, "VOLATILE" },*/
+	//{ TokenType::VOLATILE, "VOLATILE" },
 	{ TokenType::WHILE, "WHILE" },
 	{ TokenType::SEMICOLON, "SEMICOLON" },
 	{ TokenType::COMMA, "COMMA" },
@@ -84,7 +85,7 @@ static std::map<TokenType, std::string> tokenStringName = {
 	{ TokenType::AMPERSAND, "AMPERSAND" },
 	{ TokenType::OR, "OR" },
 	{ TokenType::XOR, "XOR" },
-	{ TokenType::NOT, "NOT" },
+	//{ TokenType::NOT, "NOT" },
 	{ TokenType::NOT_EQUAL, "NE_OP" },
 	/*{ TokenType::PTR, "PTR" },
 	{ TokenType::INC, "INC_OP" },

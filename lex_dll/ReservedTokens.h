@@ -1,25 +1,27 @@
 #pragma once
 #include "stdafx.h"
+#include "lex_dll.h"
 #include "TokenType.h"
 
 std::map<std::string, TokenType> reservedTokens = {
-	//{ "__wchar_t", TokenType::WIDE_CHAR },
-	//{ "wchar_t", TokenType::WIDE_CHAR },
-	//{ "TCHAR", TokenType::T_CHAR },
-	//{ "_TCHAR", TokenType::T_CHAR },
-	//{ "auto", TokenType::AUTO },
+	/*{ "__wchar_t", TokenType::WIDE_CHAR },
+	{ "wchar_t", TokenType::WIDE_CHAR },
+	{ "TCHAR", TokenType::T_CHAR },
+	{ "_TCHAR", TokenType::T_CHAR },
+	{ "auto", TokenType::AUTO },
 	{ "break", TokenType::BREAK },
-	//{ "case", TokenType::CASE },
+	{ "case", TokenType::CASE },*/
 	{ "char", TokenType::CHAR },
 	{ "cin", TokenType::CIN },
 	{ "cout", TokenType::COUT },
 	{ "map", TokenType::MAP },
-	{ "const", TokenType::CONST },
+	{ "string", TokenType::STR },
+	/*{ "const", TokenType::CONST },
 	{ "continue", TokenType::CONTINUE },
-	//{ "default", TokenType::DEFAULT },
-	//{ "decltype", TokenType::DECLTYPE },
-	//{ "do", TokenType::DO },
-	{ "double", TokenType::DOUBLE },
+	{ "default", TokenType::DEFAULT },
+	{ "decltype", TokenType::DECLTYPE },
+	{ "do", TokenType::DO },
+	{ "double", TokenType::DOUBLE },*/
 	{ "else", TokenType::ELSE },
 	//{ "enum", TokenType::ENUM },
 	//{ "extern", TokenType::EXTERN },
@@ -52,9 +54,9 @@ std::map<std::string, TokenType> reservedTokens = {
 	{ "try", TokenType::TRY },
 	{ "union", TokenType::UNION },
 	{ "unsigned", TokenType::UNSIGNED },
-	{ "using", TokenType::USING },
+	{ "using", TokenType::USING },*/
 	{ "void", TokenType::VOID },
-	{ "volatile", TokenType::VOLATILE },*/
+	//{ "volatile", TokenType::VOLATILE },
 	{ "while", TokenType::WHILE },
 	{ ";", TokenType::SEMICOLON },
 	{ ",", TokenType::COMMA },
@@ -86,7 +88,7 @@ std::map<std::string, TokenType> reservedTokens = {
 	{ "&", TokenType::AMPERSAND },
 	{ "|", TokenType::OR },
 	{ "^", TokenType::XOR },
-	{ "!", TokenType::NOT },
+	//{ "!", TokenType::NOT },
 	{ "!=", TokenType::NOT_EQUAL },
 	/*{ "->", TokenType::PTR },
 	{ "++", TokenType::INC },
@@ -105,6 +107,6 @@ std::map<std::string, TokenType> reservedTokens = {
 	{ ">>=", TokenType::RIGHT_SHIFT_ASSIGN }*/
 };
 
-std::set<std::string> delimiters = { ";", ",", "{", "}", /*":",*/ "(", ")", "[", "]", "~", /*"?", "...",*/ "+", "-", ".", "*", "/", "%", "<", ">", "<=", ">=",
+std::set<std::string> delimiters = { ";", ",", "{", "}", /*":",*/ "(", ")", "[", "]", /*"~","?", "...",*/ "+", "-", ".", "*", "/", "%", "<", ">", "<=", ">=",
 		"==", "|", "=", "&&", "||", "&", "^", "!", "!=", /*"->", "++", "--",*/ "<<", ">>"/*, "+=", "-=", "*=", "/=", "%=", "&=",	"|=", "^=",*/
 		/*"<<=", ">>="*/ };

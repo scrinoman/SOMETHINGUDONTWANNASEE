@@ -50,14 +50,14 @@ void SelfTest()
 	assert(IsString("\"asd\"\"sad\""));
 
 
-	assert(IsHEX("0xaf1"));
+	/*assert(IsHEX("0xaf1"));
 	assert(IsHEX("0x11111111111111111111111111111111111aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa55555555555555555555555555555bbbbbbbbbbbf"));
 	assert(!IsHEX("1xa"));
 
 	assert(IsOCT("01213"));
 	assert(IsOCT("0777"));
 	assert(!IsOCT("08"));
-	assert(!IsOCT("11213"));
+	assert(!IsOCT("11213"));*/
 
 	assert(IsIdentifier("s"));
 	assert(!IsIdentifier("1s"));
