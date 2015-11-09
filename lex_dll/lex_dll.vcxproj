@@ -77,9 +77,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="LexerInput.h" />
     <ClInclude Include="lex_dll.h" />
@@ -111,6 +108,9 @@
     </ClCompile>
     <ClCompile Include="StringInput.cpp" />
     <ClCompile Include="TokenAutomata.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -19,8 +19,11 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		fout << "CRT({ CRR(";
 		istringstream iss(line);
-		string type;
+		string type;// , isLeft, isLast;
 		iss >> type;
+		//iss >> isLeft >> isLast >> type;
+		//isLeft == "1" ? isLeft = "true" : "false";
+		//isLast == "1" ? isLast = "true" : "false";
 		fout << "\"" << type << "\", {";
 		string lexem;
 		while (iss >> lexem)
@@ -49,7 +52,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 		}
 
-		fout << "}, 0)}), " << endl;
+		fout << " }, 0)}), " << endl;
 	}
 
 	return 0;

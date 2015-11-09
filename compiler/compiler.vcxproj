@@ -52,7 +52,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\lex_dll;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\lex_dll;$(SolutionDir)\syntax_dll;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -94,6 +94,9 @@
   <ItemGroup>
     <ProjectReference Include="..\lex_dll\lex_dll.vcxproj">
       <Project>{c1abb094-71c2-4008-8d4a-43701911c801}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\syntax_dll\syntax_dll.vcxproj">
+      <Project>{01498d60-a930-4829-96d6-aed702595025}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

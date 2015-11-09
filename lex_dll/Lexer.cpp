@@ -26,8 +26,8 @@ set<string>::const_iterator FindDelimiter(const string &s, size_t start)
 bool DetermineTokenType(const string &token, TokenType &newTokenType)
 {
 	static const vector<TokenType> complexTokens =
-		{ TokenType::IDENTIFIER, TokenType::INTEGER_DEC_NUMBER, /*TokenType::INTEGER_HEX_NUMBER, TokenType::INTEGER_OCT_NUMBER,*/
-		TokenType::FLOAT_NUMBER, TokenType::CHARACTER, TokenType::STRING };
+		{ TokenType::IDENTIFIER, TokenType::INTEGER_DEC_NUMBER,	TokenType::FLOAT_NUMBER, 
+		  TokenType::CHARACTER, TokenType::STRING };
 
 	if (reservedTokens.count(token) > 0)
 	{
@@ -147,29 +147,35 @@ vector<Token> RecognizeTokens(const string &token)
 	return res;
 }
 
-LEX_DLL_API TokenTable ParseFile(const string &fNameInput)
+LEX_DLL_API LexerResult ParseFile(const string &fNameInput)
 {
-	TokenTable result;
+	TokenTable table;
 	CLexerInput lexer(fNameInput);
+	bool isError = false;
+
 	if (!lexer.IsOpened())
 	{
-		return result;
+		return LexerResult(table, true, string("Error occured while opening file") + fNameInput);
 	}
 
+	string errString = "";
 	while (!lexer.IsEOF())
 	{
 		auto &tokenGroup = lexer.GetNextTokenGroup();
-		result.push_back(TokenLine(RecognizeTokens(tokenGroup.tokenString), tokenGroup.row));
+		table.push_back(TokenLine(RecognizeTokens(tokenGroup.tokenString), tokenGroup.row));
 		
-		if (result.size() > 0)
+		if (table.size() > 0)
 		{
-			auto &curTokens = result[result.size() - 1].tokens;
+			auto &curTokens = table[table.size() - 1].tokens;
 			if (curTokens.size() > 0 && curTokens[curTokens.size() - 1].type == TokenType::ERROR)
 			{
+				isError = true;
+				errString = "Strange lexem at " + to_string(tokenGroup.row) + 
+							" (" + curTokens[curTokens.size() - 1].tokenString + ")";
 				break;
 			}
 		}
 	}
 
-	return result;
+	return LexerResult(table, isError, errString);
 }

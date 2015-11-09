@@ -1,0 +1,12 @@
+int main(int a, string b, char c)
+{
+a[34] = 4;
+ int q = 4;
+	int a[4];
+	q = 12354;
+	
+int wrnjnf = 14;
+string s = 3;
+map<string> abba;
+return 0;
+}

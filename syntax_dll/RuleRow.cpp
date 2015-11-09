@@ -30,4 +30,3 @@ string CRuleRow::GetRuleName() const
 {
 	return m_ruleName;
 }
-

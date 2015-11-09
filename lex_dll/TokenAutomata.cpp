@@ -20,8 +20,9 @@ bool IsIntNumber(const std::string &s)
 	{
 		return true;
 	}
-	std::string end = s.substr(i, s.length() - i);
-	return IsValidIntModifier(end);
+	//std::string end = s.substr(i, s.length() - i);
+	//return IsValidIntModifier(end);
+	return false; //инты без модификаторов
 }
 
 bool IsValidEpsNotation(std::string const& s, size_t & i)
@@ -134,31 +135,6 @@ bool IsString(std::string const& s)
 	if (!flag)	return s[s.size() - 1] == '\"';
 	return false;
 }
-
-//bool IsHEX(std::string s)
-//{
-//	if (s.length() < 3) return false;
-//	std::transform(s.begin(), s.end(), s.begin(), tolower);
-//	if (s[0] != '0' || s[1] != 'x') return false;
-//	std::set<char> hexers = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-//	for (size_t i = 2; i < s.length(); ++i)
-//	{
-//		if (!hexers.count(s[i])) return false;
-//	}
-//	return true;
-//}
-//
-//bool IsOCT(const std::string &s)
-//{
-//	if (s.length() < 2) return false;
-//	if (s[0] != '0') return false;
-//	std::set<char> octers = { '0', '1', '2', '3', '4', '5', '6', '7'};
-//	for (size_t i = 1; i < s.length(); ++i)
-//	{
-//		if (!octers.count(s[i])) return false;
-//	}
-//	return true;
-//}
 
 bool IsIdentifier(std::string const& s)
 {

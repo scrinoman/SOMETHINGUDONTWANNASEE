@@ -40,4 +40,17 @@ struct LEX_DLL_API TokenLine
 };
 
 typedef LEX_DLL_API std::vector<TokenLine> TokenTable;
-LEX_DLL_API TokenTable ParseFile(const std::string &fNameInput);
+
+struct LEX_DLL_API LexerResult
+{
+	TokenTable table;
+	bool error;
+	std::string errorMessage;
+
+	LexerResult(TokenTable &newTable, bool isError, std::string &newErrorString)
+		:table(std::move(newTable)), error(isError), errorMessage(std::move(newErrorString))
+	{
+	}
+};
+
+LEX_DLL_API LexerResult ParseFile(const std::string &fNameInput);
