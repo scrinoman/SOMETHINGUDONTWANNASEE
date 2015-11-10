@@ -143,7 +143,7 @@ static const vector<CRuleTable> grammarTable = {
 	CRT({ CRR("return", { TokenType(16) }, 133) }, TERMINAL),
 	CRT({ CRR("right_part", { TokenType(23), TokenType(2), TokenType(3), TokenType(4), TokenType(5), TokenType(1), TokenType(29) }, 70) }),
 	CRT({ CRR(";", { TokenType(19) }, 0) }, TERMINAL),
-	CRT({ CRR("cycle", { TokenType(18) }, 135), CRR("cycle", { TokenType(13) }, 143) }, LEFT_NONTERMINAL),
+	CRT({ CRR("cycle", { TokenType(18) }, 136), CRR("cycle", { TokenType(13) }, 143) }, LEFT_NONTERMINAL),
 	CRT({ CRR("while", { TokenType(18) }, 137) }, TERMINAL),
 	CRT({ CRR("(", { TokenType(23) }, 138) }, TERMINAL),
 	CRT({ CRR("cond_expr", { TokenType(23), TokenType(2), TokenType(3), TokenType(4), TokenType(5), TokenType(1) }, 182) }),

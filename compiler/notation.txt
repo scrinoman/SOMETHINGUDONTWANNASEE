@@ -30,7 +30,8 @@ int ToNotation(int num, int notation)
 
 void main()
 {
-	int firstNum, notation;
+	int firstNum;
+	int notation;
 
 	cout << "Number: ";
 	cin >> firstNum;

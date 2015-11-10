@@ -63,6 +63,18 @@ bool ProccessSyntax(const TokenTable &lexTable, SyntaxTable &syntaxTable)
 	return !res.error.isError;
 }
 
+void DebugLexer(const TokenTable &lexTable)
+{
+	ofstream fout("lex.txt");
+	for (size_t i = 0; i < lexTable.size(); ++i)
+	{
+		for (size_t j = 0; j < lexTable[i].tokens.size(); ++j)
+		{
+			fout << lexTable[i].row << " " << lexTable[i].tokens[j].tokenString << " " << lexTable[i].tokens[j].strType << endl;
+		}
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	if (!CheckArgsCount(argc))
@@ -74,6 +86,7 @@ int main(int argc, char* argv[])
 	TokenTable lexTable;
 	if (ProccessLexer(sourceFile, lexTable))
 	{
+		DebugLexer(lexTable);
 		SyntaxTable syntaxTable;
 		if (ProccessSyntax(lexTable, syntaxTable))
 		{
