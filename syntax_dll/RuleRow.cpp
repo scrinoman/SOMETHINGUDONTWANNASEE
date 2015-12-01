@@ -4,7 +4,7 @@
 using namespace std;
 
 CRuleRow::CRuleRow(string name, const vector<TokenType> &types, int pointer)
-	:m_ruleName(name), m_types(types), m_nextStep(pointer)
+	:m_ruleName(std::move(name)), m_types(types), m_nextStep(pointer)
 {
 }
 

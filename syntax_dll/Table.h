@@ -204,5 +204,5 @@ static const vector<CRuleTable> grammarTable = {
 	CRT({ CRR(")", { TokenType(24) }, 0) }, TERMINAL),
 	CRT({ CRR("const", { TokenType(2), TokenType(3), TokenType(4), TokenType(5) }, 0) }, TERMINAL),
 	CRT({ CRR("left_part", { TokenType(1) }, 106) }, LAST_NONTERMINAL),
-	CRT({ CRR("=", { TokenType(39) }, 68) }, TERMINAL)
+	CRT({ CRR("=", { TokenType(39) }, 68) }, TERMINAL) //? WutFace
 };

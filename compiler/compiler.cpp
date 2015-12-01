@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Lexer.h"
 #include "syntax_dll.h"
+#include "SyntaxTable.h"
 
 using namespace std;
 
@@ -44,7 +45,7 @@ bool ProccessLexer(const string &fileName, TokenTable &table)
 	return !res.error;
 }
 
-bool ProccessSyntax(const TokenTable &lexTable, SyntaxTable &syntaxTable)
+bool ProccessSyntax(const TokenTable &lexTable, CSyntaxTable **syntaxTable)
 {
 	cout << "Syntax works... ";
 
@@ -56,7 +57,7 @@ bool ProccessSyntax(const TokenTable &lexTable, SyntaxTable &syntaxTable)
 	}
 	else
 	{
-		syntaxTable = std::move(res.table);
+		*syntaxTable = res.table;
 		cout << "OK!" << endl;
 	}
 
@@ -87,10 +88,15 @@ int main(int argc, char* argv[])
 	if (ProccessLexer(sourceFile, lexTable))
 	{
 		DebugLexer(lexTable);
-		SyntaxTable syntaxTable;
-		if (ProccessSyntax(lexTable, syntaxTable))
+		CSyntaxTable *syntaxTable = nullptr;
+		if (ProccessSyntax(lexTable, &syntaxTable))
 		{
 			//semantics&compile
+		}
+		
+		if (syntaxTable)
+		{
+			delete syntaxTable;
 		}
 	}
 

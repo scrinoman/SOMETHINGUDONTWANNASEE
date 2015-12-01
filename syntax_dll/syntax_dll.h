@@ -4,12 +4,8 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-
-#ifdef SYNTAX_DLL_EXPORTS
-#define SYNTAX_DLL_API __declspec(dllexport)
-#else
-#define SYNTAX_DLL_API __declspec(dllimport)
-#endif
+#include "SyntaxTable.h"
+#include "symbol_export.h"
 
 enum SYNTAX_DLL_API SyntaxErrorType
 {
@@ -37,18 +33,13 @@ struct SYNTAX_DLL_API SyntaxError
 	}
 };
 
-struct SYNTAX_DLL_API SyntaxTable
-{
-
-};
-
 struct SYNTAX_DLL_API SyntaxResult
 {
-	SyntaxTable table;
+	CSyntaxTable *table;
 	SyntaxError error;
 
-	SyntaxResult(SyntaxTable &syntaxTable, SyntaxError &syntaxError)
-		:table(std::move(syntaxTable)), error(std::move(syntaxError))
+	SyntaxResult(CSyntaxTable *syntaxTable, SyntaxError &syntaxError)
+		:table(syntaxTable), error(std::move(syntaxError))
 	{
 	}
 };

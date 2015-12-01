@@ -155,7 +155,7 @@ LEX_DLL_API LexerResult ParseFile(const string &fNameInput)
 
 	if (!lexer.IsOpened())
 	{
-		return LexerResult(table, true, string("Error occured while opening file") + fNameInput);
+		return LexerResult(table, true, string("Error occured while opening file ") + fNameInput);
 	}
 
 	string errString = "";
