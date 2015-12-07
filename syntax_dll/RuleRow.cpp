@@ -3,8 +3,8 @@
 
 using namespace std;
 
-CRuleRow::CRuleRow(string name, const vector<TokenType> &types, int pointer)
-	:m_ruleName(std::move(name)), m_types(types), m_nextStep(pointer)
+CRuleRow::CRuleRow(string name, const vector<TokenType> &types, int pointer, Labels start, Labels end)
+	:m_ruleName(std::move(name)), m_types(types), m_nextStep(pointer), m_start(start), m_end(end)
 {
 }
 
@@ -29,4 +29,14 @@ int CRuleRow::GetNextPointer() const
 string CRuleRow::GetRuleName() const
 {
 	return m_ruleName;
+}
+
+Labels CRuleRow::GetStartLabel() const
+{
+	return m_start;
+}
+
+Labels CRuleRow::GetEndLabel() const
+{
+	return m_end;
 }

@@ -16,7 +16,7 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 	int pointer = 1;
 	int curScopeLevel = 0;
 	stack<int> stPointers;
-	stack<CSyntaxTable*> stTree;
+	//stack<CSyntaxTable*> stTree;
 	size_t row = 0;
 
 	for (int lexPointer = 0; lexPointer < lexTable.size(); ++lexPointer)
@@ -33,36 +33,28 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 			}
 			else
 			{
-				if (grammarTable[pointer].GetType() == GrammarTypes::NONTERMINAL)
+				if (grammarTable[pointer].GetType() == GrammarTypes::NONTERMINAL)// || grammarTable[pointer].GetType() == GrammarTypes::NEED_SLR_PARSING)
 				{
 					stPointers.push(pointer + 1);
-					stTree.push(curNode);
+					//stTree.push(curNode);
 				}
 
 				if (grammarTable[pointer].GetType() == GrammarTypes::TERMINAL)
 				{
 					tokenPointer++;
+				}
 
-					//CSyntaxTable::SYNTAX_ELEM_TYPE type;
-					//switch (pointer) //здесь надо будет поставить нормальные значения для новой грамматики
-					//{
-					//case 18:
-					//	type = CSyntaxTable::SYNTAX_ELEM_TYPE::TYPE;
-					//	break;
-					//case 123:
-					//	type = CSyntaxTable::SYNTAX_ELEM_TYPE::BIN_OPERATOR;
-					//	break;
-					//case 158:
-					//	type = CSyntaxTable::SYNTAX_ELEM_TYPE::COND_OPERATOR;
-					//	break;
-					//default:
-					//	type = CSyntaxTable::SYNTAX_ELEM_TYPE::NONE;
-					//	break;
-					//}
-
-					//CSyntaxTable *newNode = new CSyntaxTable(grammarTable[pointer].GetRow(0).GetRuleName(), type);
-					//curNode->AddChild(newNode);
-					////curNode = newNode;
+				if (grammarTable[pointer].GetType() == GrammarTypes::NEED_SLR_PARSING)
+				{
+					pointer++;
+				}
+				else
+				{
+					if (grammarTable[pointer].GetType() == GrammarTypes::NEED_SLR_PARSING_AND_LAST_NONTERMINAL)
+					{
+						pointer = stPointers.top();
+						stPointers.pop();
+					}
 				}
 
 				if (foundRule == 0)
@@ -76,23 +68,23 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 					pointer = stPointers.top();
 					stPointers.pop();
 
-					CSyntaxTable *newNode = new CSyntaxTable(grammarTable[pointer].GetRow(0).GetRuleName(), CSyntaxTable::SYNTAX_ELEM_TYPE::NONE);
-					curNode->AddChild(newNode);
+					//CSyntaxTable *newNode = new CSyntaxTable(grammarTable[pointer].GetRow(0).GetRuleName(), CSyntaxTable::SYNTAX_ELEM_TYPE::NONE);
+					//curNode->AddChild(newNode);
 
-					curNode = stTree.top();
-					stTree.pop();
+					//curNode = stTree.top();
+					//stTree.pop();
 				}
 				else
 				{
-					if (grammarTable[pointer].GetType() != GrammarTypes::LEFT_NONTERMINAL)
-					{
-						CSyntaxTable *newNode = new CSyntaxTable(grammarTable[foundRule].GetRow(0).GetRuleName(), CSyntaxTable::SYNTAX_ELEM_TYPE::NONE);
-						curNode->AddChild(newNode);
-						curNode = newNode;
-						/*CSyntaxTable *newNode = new CSyntaxTable(grammarTable[pointer].GetRow(0).GetRuleName(), CSyntaxTable::NONTERMINAL);
-						curNode->AddChild(newNode);
-						curNode = newNode;*/
-					}
+					//if (grammarTable[pointer].GetType() != GrammarTypes::LEFT_NONTERMINAL)
+					//{
+					//	CSyntaxTable *newNode = new CSyntaxTable(grammarTable[foundRule].GetRow(0).GetRuleName(), CSyntaxTable::SYNTAX_ELEM_TYPE::NONE);
+					//	curNode->AddChild(newNode);
+					//	curNode = newNode;
+					//	/*CSyntaxTable *newNode = new CSyntaxTable(grammarTable[pointer].GetRow(0).GetRuleName(), CSyntaxTable::NONTERMINAL);
+					//	curNode->AddChild(newNode);
+					//	curNode = newNode;*/
+					//}
 					pointer = foundRule;
 				}
 			}

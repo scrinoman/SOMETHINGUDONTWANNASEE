@@ -1,0 +1,100 @@
+<code> -> 
+	<func>:{int, string, char, float, void}
+<other_code> -> 
+	$:{#}
+	<code>:{int, string, char, float, void}
+<func> -> 
+	<return_type>:{void, int, string, char, float}
+<return_type> -> 
+	<var_type>:{int, string, char, float}
+	void:{void}
+<var_type> -> 
+	int:{int}
+	string:{string}
+	char:{char}
+	float:{float}
+<idlist> -> 
+	$:{)}
+	<id_decl>:{int, string, char, float}
+<id_decl> -> 
+	<var_type>:{int, string, char, float}
+<other_decl> -> 
+	',':{','}
+	$:{)}
+<explist> -> 
+	$:{'}'}
+	<expression>:{map, int, string, char, float, <id>, cin, cout, while, for, if, return }
+<expression> -> 
+	<decl_action>:{map, int, string, char, float}
+	<op_action>:{<id>}
+	<IO_call>:{cin, cout}
+	<cycle>:{while, for}
+	<condition>:{if}
+	<return_call>:{return}
+<decl_action> -> 
+	<var_decl>:{int, string, char, float}
+	<map_decl>: {map}
+<var_decl> -> 
+	<var_type>:{int, string, char, float}
+<array_part> ->
+	$:{=, ;, *, /, &, +, -, '|', ], ), ',', ==, !=, >, <, >=, <=, &&, '||'}
+	[:{[}
+<second_dimension> -> 
+	$:{=, ;, *, /, &, +, -, '|', ], ), ',', ==, !=, >, <, >=, <=, &&, '||'}
+	[:{[}
+<map_decl> -> 
+	map:{map}
+<decl_right> ->
+	$:{;}
+	=:{=}
+<const> -> 
+	<const_int>:{<const_int>}
+	<const_string>:{<const_string>}
+	<const_char>:{<const_char>}
+	<const_float>:{<const_float>}
+<low_prior_bin_op> -> 
+	+:{+}
+	-:{-}
+	'|':{'|'}
+<high_prior_bin_op> -> 
+	*:{*}
+	/:{/}
+	&:{&}
+<op_action> -> 
+	<left_part_wo_functions>:{<id>}
+<left_part_wo_functions> -> 
+	<id>:{<id>}
+<left_part> -> 
+	<id>:{<id>}
+<next_part> -> 
+	<array_part>:{=, ;, *, /, &, +, -, '|', ], ), ',', ==, !=, >, <, >=, <=, &&, '||', [ }
+	(:{(}
+<func_list> -> 
+	$:{)}
+	<right_part>:{-, <id>, (, <const_int>, <const_float>, <const_char>, <const_string>}
+<other_func_list> -> 
+	$:{)}
+	',':{','}
+<IO_call> -> 
+	cin:{cin}
+	cout:{cout}
+<cycle> -> 
+	while:{while}
+	for:{for}
+<bool_op> -> 
+	&&:{&&}
+	'||':{'||'}
+<rel_op> -> 
+	==:{==}
+	!=:{!=}
+	<:{<}
+	>:{>}
+	>=:{>=}
+	<=:{<=}
+<condition> -> 
+	if:{if}
+<else> -> 
+	$:{map, int, string, char, float, <id>, cin, cout, while, for, if, return, '}'}
+	else:{else}
+<return_call> -> 
+	return:{return}

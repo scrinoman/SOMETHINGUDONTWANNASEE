@@ -10,6 +10,8 @@ enum GrammarTypes
 	NONTERMINAL,
 	TERMINAL,
 	LAST_NONTERMINAL,
+	NEED_SLR_PARSING,
+	NEED_SLR_PARSING_AND_LAST_NONTERMINAL,
 	EMPTY
 };
 
@@ -21,14 +23,10 @@ public:
 	CRuleRow GetRow(size_t index) const;
 	bool NeedReturn() const;
 	GrammarTypes GetType() const;
-	//bool IsLast() const;
 
 private:
 	std::vector<CRuleRow> m_rows;
 	bool m_isRow;
 	mutable int m_lastFound;
 	GrammarTypes m_type;
-	/*bool m_isLeftTable;
-	bool m_isLast;*/
 };
-

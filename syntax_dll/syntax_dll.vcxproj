@@ -81,16 +81,26 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ArrayVar.h" />
+    <ClInclude Include="Function.h" />
+    <ClInclude Include="Param.h" />
+    <ClInclude Include="SemanticTables.h" />
+    <ClInclude Include="ISimpleVar.h" />
+    <ClInclude Include="MapVar.h" />
     <ClInclude Include="RuleRow.h" />
     <ClInclude Include="RuleTable.h" />
+    <ClInclude Include="SemanticTypes.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="symbol_export.h" />
     <ClInclude Include="SyntaxTable.h" />
     <ClInclude Include="syntax_dll.h" />
     <ClInclude Include="Table.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Var.h" />
+    <ClInclude Include="VarSpec.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ArrayVar.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -99,6 +109,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Function.cpp" />
+    <ClCompile Include="ISimpleVar.cpp" />
+    <ClCompile Include="MapVar.cpp" />
+    <ClCompile Include="Param.cpp" />
     <ClCompile Include="RuleRow.cpp" />
     <ClCompile Include="RuleTable.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -107,6 +121,8 @@
     </ClCompile>
     <ClCompile Include="SyntaxTable.cpp" />
     <ClCompile Include="syntax_dll.cpp" />
+    <ClCompile Include="Var.cpp" />
+    <ClCompile Include="VarSpec.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\lex_dll\lex_dll.vcxproj">

@@ -6,7 +6,7 @@ using namespace std;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	ifstream fin("input.txt");
+	ifstream fin(argv[1]);
 	ofstream fout("result.txt");
 
 	string line;
@@ -19,11 +19,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		fout << "CRT({ CRR(";
 		istringstream iss(line);
-		string type;// , isLeft, isLast;
+		string type;
 		iss >> type;
-		//iss >> isLeft >> isLast >> type;
-		//isLeft == "1" ? isLeft = "true" : "false";
-		//isLast == "1" ? isLast = "true" : "false";
 		fout << "\"" << type << "\", {";
 		string lexem;
 		while (iss >> lexem)
