@@ -1,12 +1,26 @@
+void ae(int x)
+{
+	int u = (6 + d2);
+	float er[2][44 + q * (6 + d[2 + e])];
+}
+
+string qqqq()
+{
+	return "ssss";
+}
+
 int main(int a, string b, char c)
 {
-a[34] = 4;
- int q = 4;
+	a[34] = 4;
+	int q = 4;
 	int a[4];
 	q = 12354;
-	
-int wrnjnf = 14;
-string s = 3;
-map<string> abba;
+	float er[2][44 + ww["hjfdf"] / j[i + 3][4 * g]];
+		
+	int wrnjnf = 14;
+	string s = 3;
+	int a = (f - -d * (9 + 6) - (4 + 1512 - (e / 9) * d));
+	map<string, int> abba;
+
 return 0;
 }

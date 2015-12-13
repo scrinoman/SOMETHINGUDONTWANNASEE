@@ -1,0 +1,18 @@
+( s1 - s2 const s3 left_part s7 A g4 B g5 S g6
+( s1 - s2 const s3 left_part s7 A g4 B g5 S g8
+( s9 left_part s10
+) r9 high_bin_op r9 low_bin_op r9 EOLN r9
+) r2 high_bin_op s11 low_bin_op r2 EOLN r2
+) r4 high_bin_op r4 low_bin_op r4 EOLN r4
+low_bin_op s12 EOLN acc
+) r7 high_bin_op r7 low_bin_op r7 EOLN r7
+) s13 low_bin_op s12
+( s1 - s2 const s3 left_part s7 A g4 B g5 S g14
+) r8 high_bin_op r8 low_bin_op r8 EOLN r8
+( s1 - s2 const s3 left_part s7 B g15
+( s1 - s2 const s3 left_part s7 A g16 B g5
+) r5 high_bin_op r5 low_bin_op r5 EOLN r5
+) s17 low_bin_op s12
+) r3 high_bin_op r3 low_bin_op r3 EOLN r3
+) r1 high_bin_op s11 low_bin_op r1 EOLN r1
+) r6 high_bin_op r6 low_bin_op r6 EOLN r6
