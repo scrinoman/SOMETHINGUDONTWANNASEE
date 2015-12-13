@@ -1,0 +1,16 @@
+( s1 right_part s5 ! s6 A g2 B g3 S g4
+( s1 right_part s5 ! s6 A g2 B g3 S g7
+bool_op r2 ) r2 rel_op s8 EOLN r2
+bool_op r4 ) r4 rel_op r4 EOLN r4
+bool_op s9 EOLN acc
+bool_op r7 ) r7 rel_op r7 EOLN r7
+( s10
+bool_op s9 ) s11
+( s1 right_part s5 ! s6 B g12
+( s1 right_part s5 ! s6 A g13 B g3
+( s1 right_part s5 ! s6 A g2 B g3 S g14
+bool_op r5 ) r5 rel_op r5 EOLN r5
+bool_op r3 ) r3 rel_op r3 EOLN r3
+bool_op r1 ) r1 rel_op s8 EOLN r1
+bool_op s9 ) s15
+bool_op r6 ) r6 rel_op s6 EOLN r6

@@ -25,7 +25,7 @@ std::map<std::string, TokenType> reservedTokens = {
 	{ ")", TokenType::BRACKET_R },
 	{ "[", TokenType::SQUARE_BRACKET_L },
 	{ "]", TokenType::SQUARE_BRACKET_R },
-	{ "~", TokenType::TILDE },
+	//{ "~", TokenType::TILDE },
 	{ "+", TokenType::PLUS },
 	{ "-", TokenType::MINUS },
 	{ "*", TokenType::STAR },
@@ -42,12 +42,12 @@ std::map<std::string, TokenType> reservedTokens = {
 	{ "||", TokenType::LOGICAL_OR },
 	{ "&", TokenType::AMPERSAND },
 	{ "|", TokenType::OR },
-	{ "^", TokenType::XOR },
+	//{ "^", TokenType::XOR },
 	{ "!", TokenType::NOT },
 	{ "!=", TokenType::NOT_EQUAL },
 	{ "<<", TokenType::LEFT_SHIFT },
 	{ ">>", TokenType::RIGHT_SHIFT },
 };
 
-std::set<std::string> delimiters = { ";", ",", "{", "}", "(", ")", "[", "]", "~", "+", "-", ".", "*", "/", "%", "<", ">", "<=", ">=",
-		"==", "|", "=", "&&", "||", "&", "^", "!", "!=", "<<", ">>"};
+std::set<std::string> delimiters = { ";", ",", "{", "}", "(", ")", "[", "]", /*"~",*/ "+", "-", ".", "*", "/", "%", "<", ">", "<=", ">=",
+		"==", "|", "=", "&&", "||", "&", /*"^",*/ "!", "!=", "<<", ">>"};

@@ -1,11 +1,39 @@
-void ae(int x)
+char newFunction(string s)
 {
-	int u = (6 + d2);
-	float er[2][44 + q * (6 + d[2 + e])];
+	for (int i = 0; i < 4; i = i + 1)
+	{
+	}
+
+	if (a > 3 || b <= 'a'&& (b > 5 && w == "fhhfhf"))
+	{
+		while (o != u)
+		{
+		}
+
+		for (int i = 0; i < 4; i = i + 1)
+		{
+		}
+	}
+
+	return 'a';
 }
 
-string qqqq()
+void ae(int x)
 {
+	int p = (q(1, d + p[3][4]));
+	int u = (6 + d2(3));
+	float er[2][44 + q * (6 + d[2 % e(3, 555 * d[6])])];
+}
+
+string qqqq() // this is 
+{
+	cout << "fhjdjfd";
+	cout << func();
+	cout << a[2 + func()];
+	cin >> s;
+	cin >> m[0][0];
+	cin >> non_func;
+
 	return "ssss";
 }
 
@@ -22,5 +50,5 @@ int main(int a, string b, char c)
 	int a = (f - -d * (9 + 6) - (4 + 1512 - (e / 9) * d));
 	map<string, int> abba;
 
-return 0;
+	return 0;
 }

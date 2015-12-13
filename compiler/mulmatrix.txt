@@ -1,9 +1,43 @@
 void main()
 {
-	int n1;
-	int m1;
-	int n2;
-	int m2;
-	int a[20];
+	float a[2][2];
+	float b[2][2];
+	float result[2][2];
+	for (int i = 0; i < 2; i = i + 1)
+	{
+		for (int j = 0; j < 2; j = j + 1)
+		{
+			cin >> a[i][j];
+		}
+	}
 	
+	for (int i = 0; i < 2; i = i + 1)
+	{
+		for (int j = 0; j < 2; j = j + 1)
+		{
+			cin >> b[i][j];
+		}
+	}
+	
+	for (int i = 0; i < 2; i = i + 1)
+	{
+		for (int j = 0; j < 2; j = j + 1)
+		{
+			float res = 0;
+			for (int p = 0; p < 2; p = p + 1)
+			{
+				res = res + a[i][p] * a[p][j];
+			}
+			result[i][j] = res;
+		}
+	}
+	
+	for (int i = 0; i < 2; i = i + 1)
+	{
+		for (int j = 0; j < 2; j = j + 1)
+		{
+			cout << res[i][j];
+		}
+		cout << '\n';
+	}
 }

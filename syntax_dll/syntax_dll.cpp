@@ -12,6 +12,7 @@
 using namespace std;
 
 bool StartParseRightPart(const TokenTable &lexTable, size_t &lexPointer, size_t &tokenPointer);
+bool StartParseCondExpr(const TokenTable &lexTable, size_t &lexPointer, size_t &tokenPointer);
 
 void DoShift(const TokenTable &lexTable, size_t &lexPointer, size_t &tokenPointer)
 {
@@ -59,7 +60,10 @@ bool StartParseRule(const TokenTable &lexTable, size_t &lexPointer, size_t &toke
 				}
 				else
 				{
-
+					if (!StartParseCondExpr(lexTable, lexPointer, tokenPointer))
+					{
+						return false;
+					}
 				}
 				pointer++;
 				continue;
@@ -71,6 +75,13 @@ bool StartParseRule(const TokenTable &lexTable, size_t &lexPointer, size_t &toke
 					if (grammarTable[pointer].GetRow(0).GetRuleName() == "right_part")
 					{
 						if (!StartParseRightPart(lexTable, lexPointer, tokenPointer))
+						{
+							return false;
+						}
+					}
+					else
+					{
+						if (!StartParseCondExpr(lexTable, lexPointer, tokenPointer))
 						{
 							return false;
 						}
@@ -131,6 +142,7 @@ bool StartParseRightPart(const TokenTable &lexTable, size_t &lexPointer, size_t 
 	bool needGoto = false, wasOp = true;
 	const std::vector<string> gotoReduces = {"", "S", "S", "A", "A", "B", "B", "B", "B", "B"};
 	const std::vector<int> stackPopOffsets = {0, 3, 1, 3, 1, 3, 4, 1, 2, 1};
+	int scopeLevel = 0;
 	while (1)
 	{
 		if (!needGoto)
@@ -177,6 +189,12 @@ bool StartParseRightPart(const TokenTable &lexTable, size_t &lexPointer, size_t 
 				{
 					type = "EOLN";
 				}
+
+				if (scopeLevel <= 0 && type == ")")
+				{
+					type = "EOLN";
+				}
+
 				break;
 			}
 			auto action = slrRightPartTable[curState].GetAction(type);
@@ -196,6 +214,19 @@ bool StartParseRightPart(const TokenTable &lexTable, size_t &lexPointer, size_t 
 					{
 						curState = action.passTo;
 						states.push(curState);
+						
+						if (type == "(")
+						{
+							scopeLevel++;
+						}
+						else
+						{
+							if (type == ")")
+							{
+								scopeLevel--;
+							}
+						}
+
 						if (type == "left_part")
 						{
 							if (!StartParseRule(lexTable, lexPointer, tokenPointer, 93))
@@ -253,6 +284,139 @@ bool StartParseRightPart(const TokenTable &lexTable, size_t &lexPointer, size_t 
 	return false;
 }
 
+bool StartParseCondExpr(const TokenTable &lexTable, size_t &lexPointer, size_t &tokenPointer)
+{
+	stack<int> states;
+	stack<string> gotoStates;
+	int curState = 0;
+	states.push(0);
+	bool needGoto = false;
+	const std::vector<string> gotoReduces = { "", "S", "S", "A", "A", "B", "B", "B" };
+	const std::vector<int> stackPopOffsets = { 0, 3, 1, 3, 1, 3, 4, 1};
+	int scopeLevel = 0;
+	while (1)
+	{
+		if (!needGoto)
+		{
+			Token &token = GetNextToken(lexTable, lexPointer, tokenPointer, false);
+			string type = "";
+			switch (token.type)
+			{
+			case TokenType::ERROR:
+				type = "EOLN";
+				break;
+			case TokenType::IDENTIFIER:
+			case TokenType::INTEGER_DEC_NUMBER:
+			case TokenType::FLOAT_NUMBER:
+			case TokenType::STRING:
+			case TokenType::CHARACTER:
+			case TokenType::MINUS:
+				type = "right_part";
+				break;
+			case TokenType::LOGICAL_AND:
+			case TokenType::LOGICAL_OR:
+				type = "bool_op";
+				break;
+			case TokenType::LESS:
+			case TokenType::GREATER:
+			case TokenType::LESS_OR_EQUAL:
+			case TokenType::GREATER_OR_EQUAL:
+			case TokenType::EQUAL:
+			case TokenType::NOT_EQUAL:
+				type = "rel_op";
+				break;
+			default:
+				type = token.tokenString;
+				if (type != ")" && type != "(" && type != "!")
+				{
+					type = "EOLN";
+				}
+
+				if (scopeLevel <= 0 && type == ")")
+				{
+					type = "EOLN";
+				}
+
+				break;
+			}
+			auto action = slrCondExprTable[curState].GetAction(type);
+			if (action.action == CSLRRow::Action::ActionType::REJECTED)
+			{
+				return false;
+			}
+			else
+			{
+				if (action.action == CSLRRow::Action::ActionType::ACCEPTED)
+				{
+					return true;
+				}
+				else
+				{
+					if (action.action == CSLRRow::Action::ActionType::SHIFT)
+					{
+						curState = action.passTo;
+						states.push(curState);
+
+						if (type == "(")
+						{
+							scopeLevel++;
+						}
+						else
+						{
+							if (type == ")")
+							{
+								scopeLevel--;
+							}
+						}
+
+						if (type == "right_part")
+						{
+							if (!StartParseRightPart(lexTable, lexPointer, tokenPointer))
+							{
+								return false;
+							}
+						}
+						else
+						{
+							DoShift(lexTable, lexPointer, tokenPointer);
+						}
+					}
+					else
+					{
+						if (action.action == CSLRRow::Action::ActionType::REDUCE)
+						{
+							for (int i = 0; i < stackPopOffsets[action.passTo]; ++i)
+							{
+								states.pop();
+							}
+							curState = states.top();
+							gotoStates.push(gotoReduces[action.passTo]);
+							needGoto = true;
+						}
+						else
+						{
+							assert(false, "Goto in normal states");
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			needGoto = false;
+			auto action = slrCondExprTable[curState].GetAction(gotoStates.top());
+			gotoStates.pop();
+			if (action.action != action.GOTO)
+			{
+				assert(false, "GOTO without actual goto");
+			}
+			curState = action.passTo;
+			states.push(curState);
+		}
+	}
+	return false;
+}
+
 SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 {
 	CSyntaxTable *table = new CSyntaxTable("code", CSyntaxTable::NONTERMINAL);
@@ -298,7 +462,10 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 				}
 				else
 				{
-
+					if (!StartParseCondExpr(lexTable, lexPointer, tokenPointer))
+					{
+						return SyntaxResult(table, SyntaxError(true, "False in parsing cond_expr ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
+					}
 				}
 				pointer++;
 				continue;
@@ -312,6 +479,13 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 						if (!StartParseRightPart(lexTable, lexPointer, tokenPointer))
 						{
 							return SyntaxResult(table, SyntaxError(true, "False in parsing right_part ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
+						}
+					}
+					else
+					{
+						if (!StartParseCondExpr(lexTable, lexPointer, tokenPointer))
+						{
+							return SyntaxResult(table, SyntaxError(true, "False in parsing cond_expr ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
 						}
 					}
 				}
