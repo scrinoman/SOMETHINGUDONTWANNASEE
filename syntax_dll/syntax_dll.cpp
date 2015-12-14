@@ -8,6 +8,7 @@
 #include <vector>
 #include "ArithmeticTable.h"
 #include "SLRRow.h"
+#include "Semantics.h"
 
 using namespace std;
 
@@ -426,7 +427,9 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 	int pointer = 1;
 	int curScopeLevel = 0;
 	stack<int> stPointers;
+	stack<Labels> stLabels;
 	size_t row = 0;
+	bool needCheckLabelsStack = false;
 
 	size_t lexPointer = 0;
 	size_t tokenPointer = 0;
@@ -441,6 +444,22 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 		}
 		else
 		{
+			if (grammarTable[pointer].GetRow(0).GetStartLabel() != Labels::LABEL_NONE)
+			{
+				CSemantics::Push(CSemantics::StackType(grammarTable[pointer].GetRow(0).GetStartLabel()));
+			}
+
+			if (grammarTable[pointer].GetRow(0).GetEndLabel() != Labels::LABEL_NONE && 
+				(grammarTable[pointer].GetType() == GrammarTypes::NONTERMINAL || 
+				grammarTable[pointer].GetType() == GrammarTypes::LAST_NONTERMINAL ||
+				grammarTable[pointer].GetType() == GrammarTypes::NEED_SLR_PARSING ||
+				grammarTable[pointer].GetType() == GrammarTypes::NEED_SLR_PARSING_AND_LAST_NONTERMINAL))
+			{
+				stLabels.push(LABEL_START_PASS_FROM_NONTERMINAL);
+				stLabels.push(grammarTable[pointer].GetRow(0).GetEndLabel());
+				needCheckLabelsStack = true;
+			}
+
 			if (grammarTable[pointer].GetType() == GrammarTypes::NONTERMINAL)
 			{
 				stPointers.push(pointer + 1);
@@ -448,6 +467,7 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 
 			if (grammarTable[pointer].GetType() == GrammarTypes::TERMINAL)
 			{
+				CSemantics::Push(tokens[tokenPointer]);
 				DoShift(lexTable, lexPointer, tokenPointer);
 			}
 
@@ -499,6 +519,25 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 					return SyntaxResult(table, SyntaxError(true, "Stack error ", row, SyntaxErrorType::STACK_ERROR));
 				}
 
+				if (needCheckLabelsStack)
+				{
+					std::stack<Labels> curLabels;
+					while (stLabels.top() != Labels::LABEL_START_PASS_FROM_NONTERMINAL)
+					{
+						curLabels.push(stLabels.top());
+						stLabels.pop();
+					}
+					stLabels.pop();
+
+					while (!curLabels.empty())
+					{
+						CSemantics::Push(curLabels.top());
+						curLabels.pop();
+					}
+
+					needCheckLabelsStack = false;
+				}
+
 				pointer = stPointers.top();
 				stPointers.pop();
 			}
@@ -513,6 +552,8 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 	{
 		return SyntaxResult(table, SyntaxError(true, "Need more ", row, SyntaxErrorType::EXPECTED_MORE_SYMBOLS));
 	}
+
+	CSemantics::LogToFile();
 
 	return SyntaxResult(table, SyntaxError(false));
 }

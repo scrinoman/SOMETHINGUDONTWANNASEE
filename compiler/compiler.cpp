@@ -2,6 +2,7 @@
 #include "Lexer.h"
 #include "syntax_dll.h"
 #include "SyntaxTable.h"
+#include "Semantics.h"
 
 using namespace std;
 

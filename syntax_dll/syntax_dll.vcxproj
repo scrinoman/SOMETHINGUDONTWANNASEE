@@ -85,6 +85,7 @@
     <ClInclude Include="ArrayVar.h" />
     <ClInclude Include="Function.h" />
     <ClInclude Include="Param.h" />
+    <ClInclude Include="Semantics.h" />
     <ClInclude Include="SemanticTables.h" />
     <ClInclude Include="ISimpleVar.h" />
     <ClInclude Include="MapVar.h" />
@@ -117,6 +118,7 @@
     <ClCompile Include="Param.cpp" />
     <ClCompile Include="RuleRow.cpp" />
     <ClCompile Include="RuleTable.cpp" />
+    <ClCompile Include="Semantics.cpp" />
     <ClCompile Include="SLRRow.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
