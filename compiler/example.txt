@@ -1,5 +1,9 @@
-char newFunction(string s)
+char newFunction(string s, char t)
 {
+	u = f(a, b);
+	if (a > b)
+	{
+	}
 	for (int i = 0; i < 4; i = i + 1)
 	{
 	}

@@ -52,4 +52,5 @@ enum LEX_DLL_API TokenType
 	NOT_EQUAL,
 	LEFT_SHIFT,
 	RIGHT_SHIFT,
+	UNARY_MINUS //new
 };

@@ -1,15 +1,15 @@
 #pragma once
 
-#define MOVE_PARAM_DECL /*Means that value will be taken by class member from parameter*/
+#define MOVE_PARAM_DECL /*Means that value might be taken by class member from parameter*/
 
-enum VarKind
+enum struct VarKind
 {
 	VAR,
 	ARRAY,
 	MAP_VAR
 };
 
-enum VarType
+enum struct VarType
 {
 	TYPE_VOID,
 	TYPE_INT,
@@ -20,6 +20,8 @@ enum VarType
 
 enum Labels
 {
+	START_CODE,
+	END_CODE,
 	FUNCTION_START,
 	FUNCTION_END,
 	FUNCTION_START_DECL,
@@ -42,6 +44,8 @@ enum Labels
 	END_WHILE,
 	START_FOR,
 	END_FOR,
+	START_CONDITION,
+	END_CONDITION,
 	START_IF,
 	END_IF,
 	START_ELSE,
@@ -52,6 +56,8 @@ enum Labels
 	END_VAR_DECL,
 	START_ARITHMETIC_OPERATION,
 	END_ARITHMETIC_OPERATION,
+	START_COND_EXPR,
+	END_COND_EXPR,
 	START_ARRAY_FIRST_DIM,
 	END_ARRAY_FIRST_DIM,
 	START_ARRAY_SECOND_DIM,
@@ -60,14 +66,35 @@ enum Labels
 	END_MAP_DECL,
 	START_FUNC_CALL,
 	END_FUNC_CALL,
-	START_CONDITION,
-	END_CONDITION,
 	START_FUNCTION_ARGUMENTS,
 	END_FUNCTION_ARGUMENTS,
+	START_FUNCTION_ARG,
+	END_FUNCTION_ARG,
 	START_FIRST_DIM,
 	END_FIRST_DIM,
 	START_SECOND_DIM,
 	END_SECOND_DIM,
-	LABEL_NONE,
-	LABEL_START_PASS_FROM_NONTERMINAL
+	START_VAR_DESRIBE,
+	END_VAR_DESCRIBE,
+	LABEL_NONE
+};
+
+enum struct Operator
+{
+	PLUS,
+	MINUS,
+	OR,
+	MOD,
+	MULT,
+	DIV,
+	UNARY_MINUS,
+	AND,
+	LOG_AND,
+	LOG_OR,
+	GREATER,
+	LESS,
+	EQUAl,
+	NOT_EQUAL,
+	GREATE_OR_EQUAL,
+	LESS_OR_EQUAL
 };

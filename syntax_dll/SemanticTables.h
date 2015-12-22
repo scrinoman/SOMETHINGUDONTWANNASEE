@@ -22,20 +22,20 @@ public:
 		return m_elems[index];
 	}
 	
-	void AddElement(elemType MOVE_PARAM_DECL &elem)
+	void AddElement(elemType MOVE_PARAM_DECL &&elem)
 	{
-		m_elems.push_back(std::move(elem));
+		m_elems.push_back(std::forward<elemType>(elem));
 	}
 
 private:
 	std::vector<elemType> m_elems;
 };
 
-class ParamTable : public SemanticTable<CParam>
+class ParamTable : public SemanticTable<CParam*>
 {
 };
 
-class VarTable : public SemanticTable<CVarSpec>
+class VarTable : public SemanticTable<CVarSpec*>
 {
 };
 

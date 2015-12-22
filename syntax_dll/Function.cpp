@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "Function.h"
 
-CFunction::CFunction(const std::string &name, VarType type, ParamTable &params)
+CFunction::CFunction(const std::string &name, VarType type, ParamTable* params)
 	:m_name(name)
 	, m_type(type)
-	, m_params(std::move(params))
+	, m_params(params)
 {
 }
 
@@ -18,7 +18,7 @@ VarType CFunction::GetType() const
 	return m_type;
 }
 
-ParamTable CFunction::GetParams() const
+ParamTable* CFunction::GetParams() const
 {
 	return m_params;
 }

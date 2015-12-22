@@ -28,6 +28,11 @@ void DoShift(const TokenTable &lexTable, size_t &lexPointer, size_t &tokenPointe
 bool StartParseRule(const TokenTable &lexTable, size_t &lexPointer, size_t &tokenPointer, size_t pointer)
 {
 	stack<int> stPointers;
+	stack<Labels> stLabels;
+	stack<int> stScopeGrammarLevel;
+	stack<int> stLabelsScopeGrammarLevel;
+	int scopeGrammarLevel = 0;
+
 	while (lexPointer < lexTable.size() && tokenPointer < lexTable[lexPointer].tokens.size())
 	{
 		size_t row = lexTable[lexPointer].row;
@@ -40,13 +45,36 @@ bool StartParseRule(const TokenTable &lexTable, size_t &lexPointer, size_t &toke
 		}
 		else
 		{
+			if (grammarTable[pointer].GetRow(0).GetStartLabel() != Labels::LABEL_NONE)
+			{
+				CSemantics::Push(CSemantics::StackType(grammarTable[pointer].GetRow(0).GetStartLabel()));
+			}
+
+			if (grammarTable[pointer].GetRow(0).GetEndLabel() != Labels::LABEL_NONE)
+			{
+				if (grammarTable[pointer].GetType() == GrammarTypes::NONTERMINAL ||
+					grammarTable[pointer].GetType() == GrammarTypes::LAST_NONTERMINAL ||
+					grammarTable[pointer].GetType() == GrammarTypes::NEED_SLR_PARSING_AND_LAST_NONTERMINAL)
+				{
+					stLabelsScopeGrammarLevel.push(scopeGrammarLevel);
+					stLabels.push(grammarTable[pointer].GetRow(0).GetEndLabel());
+				}
+			}
+
 			if (grammarTable[pointer].GetType() == GrammarTypes::NONTERMINAL)
 			{
+				stScopeGrammarLevel.push(scopeGrammarLevel);
 				stPointers.push(pointer + 1);
 			}
 
 			if (grammarTable[pointer].GetType() == GrammarTypes::TERMINAL)
 			{
+				CSemantics::Push(tokens[tokenPointer]);
+				if (grammarTable[pointer].GetRow(0).GetEndLabel() != Labels::LABEL_NONE)
+				{
+					CSemantics::Push(CSemantics::StackType(grammarTable[pointer].GetRow(0).GetEndLabel()));
+				}
+
 				DoShift(lexTable, lexPointer, tokenPointer);
 			}
 
@@ -59,13 +87,12 @@ bool StartParseRule(const TokenTable &lexTable, size_t &lexPointer, size_t &toke
 						return false;
 					}
 				}
-				else
+
+				if (grammarTable[pointer].GetRow(0).GetEndLabel() != Labels::LABEL_NONE)
 				{
-					if (!StartParseCondExpr(lexTable, lexPointer, tokenPointer))
-					{
-						return false;
-					}
+					CSemantics::Push(CSemantics::StackType(grammarTable[pointer].GetRow(0).GetEndLabel()));
 				}
+
 				pointer++;
 				continue;
 			}
@@ -80,28 +107,43 @@ bool StartParseRule(const TokenTable &lexTable, size_t &lexPointer, size_t &toke
 							return false;
 						}
 					}
-					else
-					{
-						if (!StartParseCondExpr(lexTable, lexPointer, tokenPointer))
-						{
-							return false;
-						}
-					}
 				}
 			}
 
 			if (foundRule == 0)
 			{
+				std::stack<Labels> curLabels;
+				int topLevelScope = stScopeGrammarLevel.empty() ? 0 : stScopeGrammarLevel.top();
+				int topLevelLabelScope = stLabelsScopeGrammarLevel.empty() ? -1 : stLabelsScopeGrammarLevel.top();
+				while (topLevelScope <= topLevelLabelScope)
+				{
+					curLabels.push(stLabels.top());
+					stLabels.pop();
+
+					stLabelsScopeGrammarLevel.pop();
+					topLevelLabelScope = stLabelsScopeGrammarLevel.empty() ? -1 : stLabelsScopeGrammarLevel.top();
+				}
+
+				while (!curLabels.empty())
+				{
+					CSemantics::Push(curLabels.top());
+					curLabels.pop();
+				}
+
 				if (stPointers.empty())
 				{
-					return true; // в принципе костыль, чисто для левой части - в общем случае тут false
+					return true;
 				}
 
 				pointer = stPointers.top();
 				stPointers.pop();
+
+				scopeGrammarLevel = stScopeGrammarLevel.top();
+				stScopeGrammarLevel.pop();
 			}
 			else
 			{
+				scopeGrammarLevel++;
 				pointer = foundRule;
 			}
 		}
@@ -228,6 +270,16 @@ bool StartParseRightPart(const TokenTable &lexTable, size_t &lexPointer, size_t 
 							}
 						}
 
+						if (type == "low_bin_op" || type == "high_bin_op" || type == "(" || type == ")" || type == "const")
+						{
+							CSemantics::Push(token);
+						}
+
+						if (type == "-") //unary minus
+						{
+							CSemantics::Push(Token("unary minus", TokenType::UNARY_MINUS));
+						}
+
 						if (type == "left_part")
 						{
 							if (!StartParseRule(lexTable, lexPointer, tokenPointer, 93))
@@ -292,8 +344,8 @@ bool StartParseCondExpr(const TokenTable &lexTable, size_t &lexPointer, size_t &
 	int curState = 0;
 	states.push(0);
 	bool needGoto = false;
-	const std::vector<string> gotoReduces = { "", "S", "S", "A", "A", "B", "B", "B" };
-	const std::vector<int> stackPopOffsets = { 0, 3, 1, 3, 1, 3, 4, 1};
+	const std::vector<string> gotoReduces = { "", "S", "S", "A", "B", "B", "B", "A" };
+	const std::vector<int> stackPopOffsets = { 0, 3, 1, 3, 3, 4, 1, 1};
 	int scopeLevel = 0;
 	while (1)
 	{
@@ -370,6 +422,11 @@ bool StartParseCondExpr(const TokenTable &lexTable, size_t &lexPointer, size_t &
 							}
 						}
 
+						if (type == "bool_op" || type == "rel_op" || type == "(" || type == ")" || type == "!")
+						{
+							CSemantics::Push(token);
+						}
+
 						if (type == "right_part")
 						{
 							if (!StartParseRightPart(lexTable, lexPointer, tokenPointer))
@@ -428,11 +485,14 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 	int curScopeLevel = 0;
 	stack<int> stPointers;
 	stack<Labels> stLabels;
+	stack<int> stScopeGrammarLevel;
+	stack<int> stLabelsScopeGrammarLevel;
+	int scopeGrammarLevel = 0;
 	size_t row = 0;
-	bool needCheckLabelsStack = false;
 
 	size_t lexPointer = 0;
 	size_t tokenPointer = 0;
+	CSemantics::Push(CSemantics::StackType(Labels::START_CODE));
 	while (lexPointer < lexTable.size() && tokenPointer < lexTable[lexPointer].tokens.size())
 	{
 		row = lexTable[lexPointer].row;
@@ -449,25 +509,31 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 				CSemantics::Push(CSemantics::StackType(grammarTable[pointer].GetRow(0).GetStartLabel()));
 			}
 
-			if (grammarTable[pointer].GetRow(0).GetEndLabel() != Labels::LABEL_NONE && 
-				(grammarTable[pointer].GetType() == GrammarTypes::NONTERMINAL || 
-				grammarTable[pointer].GetType() == GrammarTypes::LAST_NONTERMINAL ||
-				grammarTable[pointer].GetType() == GrammarTypes::NEED_SLR_PARSING ||
-				grammarTable[pointer].GetType() == GrammarTypes::NEED_SLR_PARSING_AND_LAST_NONTERMINAL))
+			if (grammarTable[pointer].GetRow(0).GetEndLabel() != Labels::LABEL_NONE)
 			{
-				stLabels.push(LABEL_START_PASS_FROM_NONTERMINAL);
-				stLabels.push(grammarTable[pointer].GetRow(0).GetEndLabel());
-				needCheckLabelsStack = true;
+				if (grammarTable[pointer].GetType() == GrammarTypes::NONTERMINAL ||
+					grammarTable[pointer].GetType() == GrammarTypes::LAST_NONTERMINAL ||
+					grammarTable[pointer].GetType() == GrammarTypes::NEED_SLR_PARSING_AND_LAST_NONTERMINAL)
+				{
+					stLabelsScopeGrammarLevel.push(scopeGrammarLevel);
+					stLabels.push(grammarTable[pointer].GetRow(0).GetEndLabel());
+				}
 			}
 
 			if (grammarTable[pointer].GetType() == GrammarTypes::NONTERMINAL)
 			{
+				stScopeGrammarLevel.push(scopeGrammarLevel);
 				stPointers.push(pointer + 1);
 			}
 
 			if (grammarTable[pointer].GetType() == GrammarTypes::TERMINAL)
 			{
 				CSemantics::Push(tokens[tokenPointer]);
+				if (grammarTable[pointer].GetRow(0).GetEndLabel() != Labels::LABEL_NONE)
+				{
+					CSemantics::Push(CSemantics::StackType(grammarTable[pointer].GetRow(0).GetEndLabel()));
+				}
+
 				DoShift(lexTable, lexPointer, tokenPointer);
 			}
 
@@ -487,6 +553,12 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 						return SyntaxResult(table, SyntaxError(true, "False in parsing cond_expr ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
 					}
 				}
+
+				if (grammarTable[pointer].GetRow(0).GetEndLabel() != Labels::LABEL_NONE)
+				{
+					CSemantics::Push(CSemantics::StackType(grammarTable[pointer].GetRow(0).GetEndLabel()));
+				}
+
 				pointer++;
 				continue;
 			}
@@ -519,30 +591,33 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 					return SyntaxResult(table, SyntaxError(true, "Stack error ", row, SyntaxErrorType::STACK_ERROR));
 				}
 
-				if (needCheckLabelsStack)
+				std::stack<Labels> curLabels;
+				int topLevelScope = stScopeGrammarLevel.top();
+				int topLevelLabelScope = stLabelsScopeGrammarLevel.empty() ? -1 : stLabelsScopeGrammarLevel.top();
+				while (topLevelScope <= topLevelLabelScope)
 				{
-					std::stack<Labels> curLabels;
-					while (stLabels.top() != Labels::LABEL_START_PASS_FROM_NONTERMINAL)
-					{
-						curLabels.push(stLabels.top());
-						stLabels.pop();
-					}
+					curLabels.push(stLabels.top());
 					stLabels.pop();
 
-					while (!curLabels.empty())
-					{
-						CSemantics::Push(curLabels.top());
-						curLabels.pop();
-					}
+					stLabelsScopeGrammarLevel.pop();
+					topLevelLabelScope = stLabelsScopeGrammarLevel.empty() ? -1 : stLabelsScopeGrammarLevel.top();
+				}
 
-					needCheckLabelsStack = false;
+				while (!curLabels.empty())
+				{
+					CSemantics::Push(curLabels.top());
+					curLabels.pop();
 				}
 
 				pointer = stPointers.top();
 				stPointers.pop();
+
+				scopeGrammarLevel = stScopeGrammarLevel.top();
+				stScopeGrammarLevel.pop();
 			}
 			else
 			{
+				scopeGrammarLevel++;
 				pointer = foundRule;
 			}
 		}
@@ -553,6 +628,7 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 		return SyntaxResult(table, SyntaxError(true, "Need more ", row, SyntaxErrorType::EXPECTED_MORE_SYMBOLS));
 	}
 
+	CSemantics::Push(CSemantics::StackType(Labels::END_CODE));
 	CSemantics::LogToFile();
 
 	return SyntaxResult(table, SyntaxError(false));

@@ -3,6 +3,8 @@
 #include "Lexer.h"
 #include "SemanticTypes.h"
 #include <stack>
+#include <set>
+#include "TokenType.h"
 
 class CSemantics
 {
@@ -31,4 +33,20 @@ public:
 
 private:
 	static std::stack<CSemantics::StackType> m_stack;
+	static std::stack<void*> m_elems;
+
+	const static std::set<TokenType> m_forbiddenSymbols;
+
+	static void CreateFunction();
+	static void CreateParamList();
+	static void CreateParam();
+
+	struct ComplexExpressionElement
+	{
+		bool isOperator;
+		Operator op;
+	};
+
+	static void CreateArithmeticExpression();
+	static void CreateConditionExpression();
 };

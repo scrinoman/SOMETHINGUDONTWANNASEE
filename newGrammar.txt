@@ -43,7 +43,7 @@
 <cycle> -> while ( <cond_expr> ) { <explist> } | for ( <var_decl> = <right_part> ; <cond_expr> ; <id> = <right_part> ) { <explist> }
 
 <cond_expr> -> <cond_expr> <bool_op> <rel_expr> | <rel_expr>
-<rel_expr> -> <rel_expr> <rel_op> <exp_cond_part> | <exp_cond_part>
+<rel_expr> -> <exp_cond_part> <rel_op> <exp_cond_part>
 <exp_cond_part> -> ( <cond_expr> ) | ! ( <cond_expr> ) | <right_part>
 
 <bool_op> -> && | '||'
