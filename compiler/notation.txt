@@ -1,0 +1,43 @@
+int ToDec(int num, int notation)
+{
+	int result = 0;
+	int m = 1;
+	while (num > 0)
+	{
+		int rest = num % 10;
+		result = result + rest * m;
+		num = num / 10;
+		m = m * notation;
+	}
+	
+	return result;
+}
+
+int ToNotation(int num, int notation)
+{
+	int result = 0;
+	int m = 1;
+	while (num > 0)
+	{
+		int rest = num % notation;
+		result = result + rest * m;
+		num = num / notation;
+		m = m * 10;
+	}
+	
+	return result;
+}
+
+void main()
+{
+	int firstNum;
+	int notation;
+
+	cout << "Number: ";
+	cin >> firstNum;
+
+	cout << "Notation: ";
+	cin >> notation;
+
+	cout << ToNotation(ToDec(num, notation), notation);
+}

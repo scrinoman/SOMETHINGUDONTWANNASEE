@@ -1,0 +1,235 @@
+code int string char float void
+func void int string char float
+other_code int string char float void
+
+other_code void int string char float 
+code void int string char float
+
+func void int string char float
+return_type int string char float void
+id id
+( (
+idlist ) int string char float
+) )
+{ {
+explist int string char float id cin cout while if for return map }
+} }
+
+return_type void 
+return_type int string char float
+void void
+var_type int string char float
+
+var_type int
+var_type string
+var_type char
+var_type float
+int int
+string string
+char char
+float float
+
+idlist int string char float
+idlist )
+id_decl int string char float
+other_decl , )
+empty )
+
+id_decl int string char float
+var_type int string char float
+id id
+
+other_decl ,
+other_decl )
+, ,
+id_decl int string char float
+other_decl , )
+empty )
+
+explist int string char float id cin cout while if for return map
+explist }
+expression int string char float id cin cout while if for return map
+explist int string char float id cin cout while if for return map }
+empty }
+
+expression int string char float map
+expression id
+expression cin cout
+expression while for
+expression if
+expression return
+decl_action int string char float map
+op_action id
+io_call cin cout
+cycle while for
+condition if
+return_call return
+
+decl_action int string char float
+decl_action map
+var_decl int string char float
+decl_right = ;
+; ;
+map_decl map
+; ;
+
+var_decl int string char float
+var_type int string char float
+id id
+array_part = ; * / & + - | ] ) , == != > < >= <= && || % [
+map_decl map
+map map
+< <
+var_type int string char float
+, ,
+var_type int string char float
+> >
+id id
+
+array_part = ; * / & + - | ] ) , == != > < >= <= && || %
+array_part [
+empty = ; * / & + - | ] ) , == != > < >= <= && || %
+[ [
+right_part - id const (
+] ]
+second_dimension = ; * / & + - | ] ) , == != > < >= <= && || % [
+
+second_dimension = ; * / & + - | ] ) , == != > < >= <= && || %
+second_dimension [
+empty = ; * / & + - | ] ) , == != > < >= <= && || %
+[ [
+right_part - id const (
+] ]
+
+decl_right =
+decl_right ;
+= =
+right_part ( const id -
+empty ;
+
+low_prior_bin_op +
+low_prior_bin_op -
+low_prior_bin_op |
+low_prior_bin_op %
++ +
+- -
+| |
+% %
+
+high_prior_bin_op *
+high_prior_bin_op /
+high_prior_bin_op &
+* *
+/ /
+& &
+
+op_action id
+left_part_wo_functions id
+= =
+right_part ( const id -
+; ;
+
+left_part_wo_functions id
+id id
+array_part = ; * / & + - | ] ) , == != > < >= <= && || % [
+
+left_part id
+id id
+next_part = ; * / & + - | ] ) , == != > < >= <= && || % [ (
+
+next_part = ; * / & + - | ] ) , == != > < >= <= && || % [
+next_part (
+array_part = ; * / & + - | ] ) , == != > < >= <= && || % [
+( (
+func_list - id ( const )
+) )
+
+func_list - id ( const
+func_list )
+empty )
+right_part - id ( const
+other_func_list ) ,
+
+other_func_list )
+other_func_list ,
+empty )
+, ,
+right_part - id const (
+other_func_list ) ,
+
+io_call cin
+io_call cout
+cin cin
+>> >>
+left_part_wo_functions id
+; ;
+cout cout
+<< <<
+right_part ( const id -
+; ;
+
+cycle while
+cycle for
+while while
+( (
+cond_expr ( const id !
+) )
+{ {
+explist int string char float id cin cout while if for return map }
+} }
+for for
+( (
+var_decl int string char float
+= =
+right_part ( const id -
+; ;
+cond_expr ( const id !
+; ;
+id id
+= =
+right_part ( const id -
+) )
+{ {
+explist int string char float id cin cout while if for return map }
+} }
+
+bool_op &&
+bool_op ||
+&& &&
+|| ||
+
+rel_op >
+rel_op <
+rel_op !=
+rel_op ==
+rel_op <=
+rel_op >=
+> >
+< <
+!= !=
+== ==
+<= <=
+>= >=
+
+condition if
+if if
+( (
+cond_expr ( const id !
+) )
+{ {
+explist int string char float id cin cout while if for return map }
+} }
+else } int string char float id cin cout while if for return map else
+
+else } int string char float id cin cout while if for return map
+else else
+empty } int string char float id cin cout while if for return map 
+else else
+{ {
+explist int string char float id cin cout while if for return map }
+} }
+
+return_call return
+return return
+right_part ( const id -
+; ;
