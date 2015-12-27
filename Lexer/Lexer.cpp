@@ -8,6 +8,10 @@
 
 using namespace std;
 
+static const vector<TokenType> complexTokens =
+	{ TokenType::IDENTIFIER, TokenType::INTEGER_DEC_NUMBER, TokenType::FLOAT_NUMBER,
+	  TokenType::CHARACTER, TokenType::STRING };
+
 set<string>::const_iterator FindDelimiter(const string &s, size_t start)
 {
 	for (size_t i = 3; i > 0; --i)
@@ -25,10 +29,6 @@ set<string>::const_iterator FindDelimiter(const string &s, size_t start)
 
 bool DetermineTokenType(const string &token, TokenType &newTokenType)
 {
-	static const vector<TokenType> complexTokens =
-		{ TokenType::IDENTIFIER, TokenType::INTEGER_DEC_NUMBER,	TokenType::FLOAT_NUMBER, 
-		  TokenType::CHARACTER, TokenType::STRING };
-
 	if (reservedTokens.count(token) > 0)
 	{
 		newTokenType = reservedTokens[token];
@@ -69,7 +69,7 @@ bool DetermineToken(const string &token, Token &newToken)
 	return false;
 }
 
-vector<Token> RecognizeTokens(const string &token)
+vector<Token> RecognizeTokens(const string &token, TokenType prevTokenType)
 {
 	vector<Token> res;
 	string curToken = "";
@@ -104,11 +104,30 @@ vector<Token> RecognizeTokens(const string &token)
 
 			if (*it == "+" || *it == "-")
 			{
-				if (curToken != "" && newToken.type != TokenType::IDENTIFIER)
+				bool isPrevTokenTypeInComplex = false;
+				if (found && newToken.type != TokenType::ERROR)
+				{
+					prevTokenType = newToken.type;
+				}
+				for each (TokenType type in complexTokens)  // roflovelosiped
+				{
+					if (prevTokenType == type)
+					{
+						isPrevTokenTypeInComplex = true;
+						break;
+					}
+				}
+				if (!isPrevTokenTypeInComplex)
 				{
 					curToken += c;
 					continue;
 				}
+
+				/*if (curToken != "" && newToken.type != TokenType::IDENTIFIER)
+				{
+					curToken += c;
+					continue;
+				}*/
 			}
 
 			if (*it == ".")
@@ -130,6 +149,7 @@ vector<Token> RecognizeTokens(const string &token)
 				return res;
 			}
 
+			prevTokenType = reservedTokens[*it];
 			res.push_back(Token(*it, reservedTokens[*it]));
 			i += (it->length() - 1);
 			strToken.IncIndex(it->length() - 1);
@@ -159,10 +179,13 @@ LEX_DLL_API LexerResult ParseFile(const string &fNameInput)
 	}
 
 	string errString = "";
+	TokenType prevTokenType = TokenType::INT; // roflokostil
 	while (!lexer.IsEOF())
 	{
 		auto &tokenGroup = lexer.GetNextTokenGroup();
-		table.push_back(TokenLine(RecognizeTokens(tokenGroup.tokenString), tokenGroup.row));
+		TokenLine newTokenLine = TokenLine(RecognizeTokens(tokenGroup.tokenString, prevTokenType), tokenGroup.row);
+		prevTokenType = newTokenLine.tokens.back().type;
+		table.push_back(newTokenLine);
 		
 		if (table.size() > 0)
 		{

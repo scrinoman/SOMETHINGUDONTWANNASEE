@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 1 char CHAR
 1 newFunction IDENTIFIER
 1 ( PARENTHESIS_L
@@ -338,3 +339,9 @@
 62 0 CONST_INTEGER
 62 ; SEMICOLON
 63 } BRACE_R
+=======
+1 a IDENTIFIER
+1 [ SQUARE_BRACKET_L
+1 -2 CONST_INTEGER
+1 ] SQUARE_BRACKET_R
+>>>>>>> origin/master
