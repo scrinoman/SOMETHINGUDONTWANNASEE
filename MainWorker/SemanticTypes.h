@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Lexer.h"
+#include "TokenType.h"
+
 #define MOVE_PARAM_DECL /*Means that value might be taken by class member from parameter*/
 
 enum struct VarKind
@@ -97,4 +100,94 @@ enum struct Operator
 	NOT_EQUAL,
 	GREATE_OR_EQUAL,
 	LESS_OR_EQUAL
+};
+
+struct VarElement
+{
+	std::string name;
+	VarType type;
+	int scope;
+
+	bool hasFirstDim, hasSecondDim;
+	VarType firstDimType, secondDimType;
+};
+
+struct VariableDescription;
+struct ComplexExpressionElement
+{
+	bool isOperator = false;
+	bool isConst = false;
+	Operator op = Operator::PLUS;
+	Token constToken;
+	VariableDescription *desc = nullptr;
+	VarType returnType = VarType::TYPE_VOID;
+
+	ComplexExpressionElement()
+	{
+	}
+
+	ComplexExpressionElement(Operator newOperator)
+		: op(newOperator), isOperator(true), isConst(false)
+	{
+	}
+
+	ComplexExpressionElement(const Token &token)
+		: constToken(token), isOperator(false), isConst(true)
+	{
+	}
+
+	ComplexExpressionElement(VariableDescription *newDesc)
+		: isOperator(false), isConst(false), desc(newDesc)
+	{
+	}
+};
+
+typedef std::vector<ComplexExpressionElement> ComplexExpression;
+
+struct FunctionArgument
+{
+	ComplexExpression exp;
+
+	FunctionArgument(const ComplexExpression &expression)
+		:exp(expression)
+	{
+	}
+};
+
+typedef std::vector<FunctionArgument> FunctionArguments;
+
+struct FunctionCall
+{
+	int funcPointer = -1;
+	FunctionArguments *args;
+};
+
+struct VariableDescription
+{
+	bool isFunctionCall = false;
+	FunctionCall *func;
+
+	int pointer = -1;
+
+	bool hasFirstDim = false, hasSecondDim = false;
+	ComplexExpression firstDim, secondDim;
+
+	VariableDescription()
+	{
+	}
+
+	VariableDescription(int newPointer)
+		:pointer(newPointer), hasFirstDim(false), hasSecondDim(false)
+	{
+	}
+
+	VariableDescription(int newPointer, const ComplexExpression &newComplexPart)
+		:pointer(newPointer), firstDim(newComplexPart), hasFirstDim(true), hasSecondDim(false)
+	{
+	}
+
+	VariableDescription(int newPointer, const ComplexExpression &newFirstComplexPart, const ComplexExpression &newSecondComplexPart)
+		:pointer(newPointer), firstDim(newFirstComplexPart), secondDim(newSecondComplexPart), hasFirstDim(true), hasSecondDim(true)
+	{
+	}
 };

@@ -586,12 +586,6 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 
 			if (foundRule == 0)
 			{
-				if (stPointers.empty())
-				{
-					//такое вообще возможно ? - рофл, возможно
-					return SyntaxResult(table, SyntaxError(true, "Stack error ", row, SyntaxErrorType::STACK_ERROR));
-				}
-
 				std::stack<Labels> curLabels;
 				int topLevelScope = stScopeGrammarLevel.top();
 				int topLevelLabelScope = stLabelsScopeGrammarLevel.empty() ? -1 : stLabelsScopeGrammarLevel.top();

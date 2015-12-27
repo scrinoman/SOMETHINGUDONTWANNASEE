@@ -13,14 +13,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Const tables">
+      <UniqueIdentifier>{828fdcc3-e15d-494f-af6d-5a21ec07688d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ArithmeticTable.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
     <ClInclude Include="ArrayVar.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
@@ -66,9 +66,6 @@
     <ClInclude Include="SyntaxTable.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="Table.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
@@ -77,6 +74,12 @@
     </ClInclude>
     <ClInclude Include="VarSpec.h">
       <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="ArithmeticTable.h">
+      <Filter>Const tables</Filter>
+    </ClInclude>
+    <ClInclude Include="Table.h">
+      <Filter>Const tables</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

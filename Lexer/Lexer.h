@@ -15,6 +15,13 @@ struct LEX_DLL_API Token
 		strType(tokenStringName[type])
 	{
 	}
+
+	Token()
+		:tokenString(""),
+		type(TokenType::ERROR),
+		strType("No token")
+	{
+	}
 };
 
 struct TokenGroup
