@@ -69,7 +69,7 @@ bool DetermineToken(const string &token, Token &newToken)
 	return false;
 }
 
-vector<Token> RecognizeTokens(const string &token, TokenType prevTokenType)
+vector<Token> RecognizeTokens(const string &token/*, TokenType prevTokenType*/)
 {
 	vector<Token> res;
 	string curToken = "";
@@ -104,7 +104,7 @@ vector<Token> RecognizeTokens(const string &token, TokenType prevTokenType)
 
 			if (*it == "+" || *it == "-")
 			{
-				bool isPrevTokenTypeInComplex = false;
+				/*bool isPrevTokenTypeInComplex = false;
 				if (found && newToken.type != TokenType::ERROR)
 				{
 					prevTokenType = newToken.type;
@@ -122,12 +122,12 @@ vector<Token> RecognizeTokens(const string &token, TokenType prevTokenType)
 					curToken += c;
 					continue;
 				}
-
-				/*if (curToken != "" && newToken.type != TokenType::IDENTIFIER)
+				*/
+				if (curToken != "" && newToken.type != TokenType::IDENTIFIER)
 				{
 					curToken += c;
 					continue;
-				}*/
+				}
 			}
 
 			if (*it == ".")
@@ -149,7 +149,7 @@ vector<Token> RecognizeTokens(const string &token, TokenType prevTokenType)
 				return res;
 			}
 
-			prevTokenType = reservedTokens[*it];
+			//prevTokenType = reservedTokens[*it];
 			res.push_back(Token(*it, reservedTokens[*it]));
 			i += (it->length() - 1);
 			strToken.IncIndex(it->length() - 1);
@@ -167,6 +167,40 @@ vector<Token> RecognizeTokens(const string &token, TokenType prevTokenType)
 	return res;
 }
 
+vector<Token> FillNewTokens(TokenLine const &line, size_t replacingIndex)
+{
+	vector<Token> tokens;
+	size_t i = 0;
+	while (i < line.tokens.size())
+	{
+		if (i == replacingIndex)
+		{
+			i++;
+			string tokenString = "-" + line.tokens[i].tokenString;
+			Token token = Token(tokenString, line.tokens[i].type);
+			tokens.push_back(token);
+		}
+		else
+		{
+			tokens.push_back(line.tokens[i]);
+		}
+		i++;
+	}
+	return tokens;
+}
+
+void ParseTokenLine(TokenLine &line)  // append unary minus to consts if needed
+{
+	for (size_t i = 0; i < line.tokens.size(); i++)
+	{
+		if (line.tokens[i].type == TokenType::MINUS && i < line.tokens.size() - 1 &&
+			(line.tokens[i + 1].type == TokenType::INTEGER_DEC_NUMBER || line.tokens[i + 1].type == TokenType::FLOAT_NUMBER || line.tokens[i + 1].type == TokenType::FLOAT))
+		{
+			line.tokens = FillNewTokens(line, i);
+		}
+	}
+}
+
 LEX_DLL_API LexerResult ParseFile(const string &fNameInput)
 {
 	TokenTable table;
@@ -179,12 +213,13 @@ LEX_DLL_API LexerResult ParseFile(const string &fNameInput)
 	}
 
 	string errString = "";
-	TokenType prevTokenType = TokenType::INT; // roflokostil
+	//TokenType prevTokenType = TokenType::INT; // roflokostil
 	while (!lexer.IsEOF())
 	{
 		auto &tokenGroup = lexer.GetNextTokenGroup();
-		TokenLine newTokenLine = TokenLine(RecognizeTokens(tokenGroup.tokenString, prevTokenType), tokenGroup.row);
-		prevTokenType = newTokenLine.tokens.back().type;
+		TokenLine newTokenLine = TokenLine(RecognizeTokens(tokenGroup.tokenString), tokenGroup.row);
+		ParseTokenLine(newTokenLine);
+		//prevTokenType = newTokenLine.tokens.back().type;
 		table.push_back(newTokenLine);
 		
 		if (table.size() > 0)

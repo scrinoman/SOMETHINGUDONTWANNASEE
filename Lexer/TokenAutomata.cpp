@@ -59,13 +59,18 @@ bool IsValidEpsNotation(std::string const& s, size_t & i)
 bool IsFloatNumber(std::string const& s)
 {
 	size_t i = 0;
-	if ((s[i] != '-' && s.length() > 0) && (s[i] != '+' && s.length() > 0))
-	{
-		return false;
-	}
-	i++;
+	
 	if (!isdigit(s[i]) && s[i] != '.')
-		return false;
+	{
+		if ((s[i] == '-' && s.length() > 0) || (s[i] == '+' && s.length() > 0))
+		{
+			i++;
+		}
+		else
+		{
+			return false;
+		}
+	}
 	while (i < s.length() && isdigit(s[i]))
 	{
 		i++;
