@@ -433,10 +433,13 @@ bool StartParseCondExpr(const TokenTable &lexTable, size_t &lexPointer, size_t &
 
 						if (type == "right_part")
 						{
+							CSemantics::Push(Labels::START_ARITHMETIC_OPERATION); //костыль
 							if (!StartParseRightPart(lexTable, lexPointer, tokenPointer))
 							{
+								CSemantics::Push(Labels::END_ARITHMETIC_OPERATION);
 								return false;
 							}
+							CSemantics::Push(Labels::END_ARITHMETIC_OPERATION);
 						}
 						else
 						{

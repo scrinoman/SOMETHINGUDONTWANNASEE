@@ -1,6 +1,11 @@
-void check1(int u, string s)
+void check1(int u, string oo)
 {
 	int a;
+	int j;
+	int p = a + u;
+	if (a > j && (p * 3 != j))
+	{
+	}
 	int z[3];
 	char b[2];
 	int q = a + z[2];

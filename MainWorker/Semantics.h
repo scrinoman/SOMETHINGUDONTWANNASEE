@@ -6,6 +6,8 @@
 #include <set>
 #include "TokenType.h"
 #include "Function.h"
+#include <iostream>
+#include <fstream>
 
 class CSemantics
 {
@@ -65,4 +67,7 @@ private:
 
 	static Operator GetOperatorByString(const std::string &opString);
 	static VarType GetType(TokenType type);
+
+	static std::ofstream cmdWriter;
+	static void LogVarType(VarType type);
 };

@@ -20,6 +20,7 @@ std::vector<VarElement> CSemantics::m_curVarTable;
 std::vector<VarElement> CSemantics::m_varTable;
 std::stack<VarType> CSemantics::m_types;
 std::vector<FunctionTable*> CSemantics::m_funcTables;
+std::ofstream CSemantics::cmdWriter("cmdLog.txt");
 int CSemantics::curScope = 0;
 
 const std::set<TokenType> CSemantics::m_forbiddenSymbols = {
@@ -85,6 +86,7 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case FUNCTION_START:
 				break;
 			case FUNCTION_END:
+				cmdWriter << "func end" << std::endl;
 				break;
 			case FUNCTION_START_DECL:
 				break;
@@ -258,10 +260,50 @@ void CSemantics::LogToFile()
 	std::stack<StackType> okStack;
 }
 
+void CSemantics::LogVarType(VarType type)
+{
+	switch (type)
+	{
+	case VarType::TYPE_VOID:
+		cmdWriter << "void";
+		break;
+	case VarType::TYPE_INT:
+		cmdWriter << "int";
+		break;
+	case VarType::TYPE_CHAR:
+		cmdWriter << "char";
+		break;
+	case VarType::TYPE_FLOAT:
+		cmdWriter << "float";
+		break;
+	case VarType::TYPE_STRING:
+		cmdWriter << "string";
+		break;
+	case VarType::TYPE_BOOL:
+		cmdWriter << "bool";
+		break;
+	default:
+		break;
+	}
+
+	cmdWriter << " ";
+}
+
 void CSemantics::CreateFunction()
 {
 	auto paramTable = static_cast<ParamTable*>(m_elems.top());
 	m_elems.pop();
+	for (size_t i = 0; i < paramTable->GetCount(); ++i)
+	{
+		auto elem = paramTable->GetElement(i);
+		VarElement varElem;
+		varElem.name = elem->GetName();
+		varElem.hasFirstDim = false;
+		varElem.hasSecondDim = false;
+		varElem.scope = 1;
+		varElem.type = elem->GetType();
+		m_curVarTable.push_back(varElem);
+	}
 
 	m_stack.pop(); //miss both parenthesises
 	m_stack.pop();
@@ -298,6 +340,15 @@ void CSemantics::CreateFunction()
 	funcTable->AddElement(new CFunction(funcName, varType, paramTable));
 	m_funcTables.push_back(funcTable);
 
+	cmdWriter << "func ";
+	LogVarType(varType);
+	cmdWriter << paramTable->GetCount() << " ";
+	for (size_t i = 0; i < paramTable->GetCount(); ++i)
+	{
+		auto elem = paramTable->GetElement(i);
+		LogVarType(elem->GetType());
+	}
+	cmdWriter << std::endl;
 	//m_elems.push((void*)(funcTable));
 }
 
@@ -394,6 +445,11 @@ void CSemantics::RecognizeArrayPart()
 	m_types.pop();
 
 	int pointer = GetVarInTable(m_stack.top().token.tokenString);
+	if (m_error)
+	{
+		return;
+	}
+
 	if ((m_curVarTable[pointer].hasSecondDim && !hasSecond) || (!m_curVarTable[pointer].hasSecondDim && hasSecond))
 	{
 		m_error = true;
@@ -487,6 +543,11 @@ void CSemantics::RecognizeSimpleVar()
 	m_stack.pop();
 
 	int pointer = GetVarInTable(top.token.tokenString);
+	if (m_error)
+	{
+		return;
+	}
+
 	if (m_curVarTable[pointer].hasFirstDim)
 	{
 		m_error = true;
