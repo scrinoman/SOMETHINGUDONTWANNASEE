@@ -1,4 +1,0 @@
-func void 2 int string 
-func end
-func int 0 
-func end

@@ -198,6 +198,7 @@ LEX_DLL_API LexerResult ParseFile(const string &fNameInput)
 		TokenLine newTokenLine = TokenLine(RecognizeTokens(tokenGroup.tokenString), tokenGroup.row);
 		ParseTokenLine(newTokenLine);
 		table.push_back(newTokenLine);
+	}
 	while (!lexer.IsEOF())
 	{
 		auto &tokenGroup = lexer.GetNextTokenGroup();
