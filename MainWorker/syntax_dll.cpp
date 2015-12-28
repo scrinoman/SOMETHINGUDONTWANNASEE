@@ -33,7 +33,7 @@ bool StartParseRule(const TokenTable &lexTable, size_t &lexPointer, size_t &toke
 	stack<int> stLabelsScopeGrammarLevel;
 	int scopeGrammarLevel = 0;
 
-	while (lexPointer < lexTable.size() && tokenPointer < lexTable[lexPointer].tokens.size())
+	while (lexPointer < lexTable.size() && tokenPointer < lexTable[lexPointer].tokens.size() && !CSemantics::FoundError())
 	{
 		size_t row = lexTable[lexPointer].row;
 		auto &tokens = lexTable[lexPointer].tokens;
@@ -124,7 +124,7 @@ bool StartParseRule(const TokenTable &lexTable, size_t &lexPointer, size_t &toke
 					topLevelLabelScope = stLabelsScopeGrammarLevel.empty() ? -1 : stLabelsScopeGrammarLevel.top();
 				}
 
-				while (!curLabels.empty())
+				while (!curLabels.empty() && !CSemantics::FoundError())
 				{
 					CSemantics::Push(curLabels.top());
 					curLabels.pop();
@@ -187,7 +187,7 @@ bool StartParseRightPart(const TokenTable &lexTable, size_t &lexPointer, size_t 
 	const std::vector<int> stackPopOffsets = {0, 3, 1, 3, 1, 3, 4, 1, 2, 1};
 
 	int scopeLevel = 0;
-	while (1)
+	while (!CSemantics::FoundError())
 	{
 		if (!needGoto)
 		{
@@ -244,6 +244,7 @@ bool StartParseRightPart(const TokenTable &lexTable, size_t &lexPointer, size_t 
 			auto action = slrRightPartTable[curState].GetAction(type);
 			if (action.action == CSLRRow::Action::ActionType::REJECTED)
 			{
+				std::cout << "Unexpected symbol " << token.tokenString << std::endl;
 				return false;
 			}
 			else
@@ -335,6 +336,7 @@ bool StartParseRightPart(const TokenTable &lexTable, size_t &lexPointer, size_t 
 			states.push(curState);
 		}
 	}
+	//std::cout << "Expected more tokens in arithmetic expression" << std::endl;
 	return false;
 }
 
@@ -348,7 +350,7 @@ bool StartParseCondExpr(const TokenTable &lexTable, size_t &lexPointer, size_t &
 	const std::vector<string> gotoReduces = { "", "S", "S", "A", "B", "B", "B", "A" };
 	const std::vector<int> stackPopOffsets = { 0, 3, 1, 3, 3, 4, 1, 1};
 	int scopeLevel = 0;
-	while (1)
+	while (!CSemantics::FoundError())
 	{
 		if (!needGoto)
 		{
@@ -396,6 +398,7 @@ bool StartParseCondExpr(const TokenTable &lexTable, size_t &lexPointer, size_t &
 			auto action = slrCondExprTable[curState].GetAction(type);
 			if (action.action == CSLRRow::Action::ActionType::REJECTED)
 			{
+				std::cout << "Incorrect symbol " << token.tokenString << std::endl;
 				return false;
 			}
 			else
@@ -430,10 +433,13 @@ bool StartParseCondExpr(const TokenTable &lexTable, size_t &lexPointer, size_t &
 
 						if (type == "right_part")
 						{
+							CSemantics::Push(Labels::START_ARITHMETIC_OPERATION); //костыль
 							if (!StartParseRightPart(lexTable, lexPointer, tokenPointer))
 							{
+								CSemantics::Push(Labels::END_ARITHMETIC_OPERATION);
 								return false;
 							}
+							CSemantics::Push(Labels::END_ARITHMETIC_OPERATION);
 						}
 						else
 						{
@@ -473,6 +479,8 @@ bool StartParseCondExpr(const TokenTable &lexTable, size_t &lexPointer, size_t &
 			states.push(curState);
 		}
 	}
+
+	//std::cout << "Expected more tokens in condition" << std::endl;
 	return false;
 }
 
@@ -494,7 +502,7 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 	size_t lexPointer = 0;
 	size_t tokenPointer = 0;
 	CSemantics::Push(CSemantics::StackType(Labels::START_CODE));
-	while (lexPointer < lexTable.size() && tokenPointer < lexTable[lexPointer].tokens.size())
+	while (lexPointer < lexTable.size() && tokenPointer < lexTable[lexPointer].tokens.size() && !CSemantics::FoundError())
 	{
 		row = lexTable[lexPointer].row;
 		auto &tokens = lexTable[lexPointer].tokens;
@@ -544,14 +552,14 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 				{
 					if (!StartParseRightPart(lexTable, lexPointer, tokenPointer))
 					{
-						return SyntaxResult(table, SyntaxError(true, "False in parsing right_part ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
+						return SyntaxResult(table, SyntaxError(true, "Error while parsing arithmetic expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
 					}
 				}
 				else
 				{
 					if (!StartParseCondExpr(lexTable, lexPointer, tokenPointer))
 					{
-						return SyntaxResult(table, SyntaxError(true, "False in parsing cond_expr ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
+						return SyntaxResult(table, SyntaxError(true, "Error while parsing condition expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
 					}
 				}
 
@@ -571,14 +579,14 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 					{
 						if (!StartParseRightPart(lexTable, lexPointer, tokenPointer))
 						{
-							return SyntaxResult(table, SyntaxError(true, "False in parsing right_part ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
+							return SyntaxResult(table, SyntaxError(true, "Error while parsing arithmetic expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
 						}
 					}
 					else
 					{
 						if (!StartParseCondExpr(lexTable, lexPointer, tokenPointer))
 						{
-							return SyntaxResult(table, SyntaxError(true, "False in parsing cond_expr ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
+							return SyntaxResult(table, SyntaxError(true, "Error while parsing condition expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
 						}
 					}
 				}
@@ -598,7 +606,7 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 					topLevelLabelScope = stLabelsScopeGrammarLevel.empty() ? -1 : stLabelsScopeGrammarLevel.top();
 				}
 
-				while (!curLabels.empty())
+				while (!curLabels.empty() && !CSemantics::FoundError())
 				{
 					CSemantics::Push(curLabels.top());
 					curLabels.pop();
@@ -620,7 +628,7 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 
 	if (!stPointers.empty() || pointer != 3)
 	{
-		return SyntaxResult(table, SyntaxError(true, "Need more ", row, SyntaxErrorType::EXPECTED_MORE_SYMBOLS));
+		return SyntaxResult(table, SyntaxError(true, "Expected more tokens", row, SyntaxErrorType::EXPECTED_MORE_SYMBOLS));
 	}
 
 	CSemantics::Push(CSemantics::StackType(Labels::END_CODE));

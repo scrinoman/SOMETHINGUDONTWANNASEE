@@ -1,0 +1,25 @@
+void check1(int u, string oo)
+{
+	int a;
+	int j;
+	int p = a + u;
+	if (a > j && (p * 3 != j))
+	{
+	}
+	int z[3];
+	char b[2];
+	int q = a + z[2];
+	float c[a];
+	string s[a + 222];
+	int d[2][33];
+	float f[a][23];
+	string g[a + 22][a];
+}
+
+int check2()
+{
+	int p;
+	string a;
+	int w = check1(p, a);
+	int e = check2();
+}

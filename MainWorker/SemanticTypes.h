@@ -18,7 +18,8 @@ enum struct VarType
 	TYPE_INT,
 	TYPE_CHAR,
 	TYPE_FLOAT,
-	TYPE_STRING
+	TYPE_STRING,
+	TYPE_BOOL //HIDDEN TYPE
 };
 
 enum Labels
@@ -96,19 +97,20 @@ enum struct Operator
 	LOG_OR,
 	GREATER,
 	LESS,
-	EQUAl,
+	EQUAL,
 	NOT_EQUAL,
-	GREATE_OR_EQUAL,
-	LESS_OR_EQUAL
+	GREATER_OR_EQUAL,
+	LESS_OR_EQUAL,
+	NOT
 };
 
 struct VarElement
 {
-	std::string name;
-	VarType type;
-	int scope;
+	std::string name = "";
+	VarType type = VarType::TYPE_VOID;
+	int scope = -1;
 
-	bool hasFirstDim, hasSecondDim;
+	bool hasFirstDim = false, hasSecondDim = false;
 	VarType firstDimType, secondDimType;
 };
 
@@ -144,12 +146,49 @@ struct ComplexExpressionElement
 
 typedef std::vector<ComplexExpressionElement> ComplexExpression;
 
+struct BooleanExpressionElement
+{
+	enum struct ExpType
+	{
+		EXPRESSION_NONE,
+		EXPRESSION_OPERATOR,
+		EXPRESSION_CONST,
+		EXPRESSION_COMPLEX
+	} type = ExpType::EXPRESSION_NONE;
+
+	Operator op = Operator::PLUS;
+	Token constToken;
+	ComplexExpression elem;
+
+	BooleanExpressionElement()
+	{
+	}
+
+	BooleanExpressionElement(Operator newOperator)
+		: op(newOperator), type(ExpType::EXPRESSION_OPERATOR)
+	{
+	}
+
+	BooleanExpressionElement(const Token &token)
+		: constToken(token), type(ExpType::EXPRESSION_CONST)
+	{
+	}
+
+	BooleanExpressionElement(const ComplexExpression &newExp)
+		: elem(newExp), type(ExpType::EXPRESSION_COMPLEX)
+	{
+	}
+};
+
+typedef std::vector<BooleanExpressionElement> BooleanComplexExpression;
+
 struct FunctionArgument
 {
 	ComplexExpression exp;
+	VarType type;
 
-	FunctionArgument(const ComplexExpression &expression)
-		:exp(expression)
+	FunctionArgument(const ComplexExpression &expression, VarType newType)
+		:exp(expression), type(newType)
 	{
 	}
 };
@@ -159,13 +198,13 @@ typedef std::vector<FunctionArgument> FunctionArguments;
 struct FunctionCall
 {
 	int funcPointer = -1;
-	FunctionArguments *args;
+	FunctionArguments *args = nullptr;
 };
 
 struct VariableDescription
 {
 	bool isFunctionCall = false;
-	FunctionCall *func;
+	FunctionCall *func = nullptr;
 
 	int pointer = -1;
 

@@ -5,6 +5,9 @@
 #include <stack>
 #include <set>
 #include "TokenType.h"
+#include "Function.h"
+#include <iostream>
+#include <fstream>
 
 class CSemantics
 {
@@ -29,9 +32,11 @@ public:
 	
 	static void Push(StackType &&element);
 	static StackType Pop();
+	static bool FoundError();
 	static void LogToFile();
 
 private:
+	static bool m_error;
 	static std::stack<CSemantics::StackType> m_stack;
 	static std::stack<void*> m_elems;
 
@@ -50,12 +55,19 @@ private:
 	static int GetVarInTable(const std::string &varName);
 
 	static std::stack<ComplexExpression> m_evalStack;
+	static std::stack<BooleanComplexExpression> m_boolStack;
 	static std::stack<VariableDescription*> m_varStack;
 	static std::stack<VarType> m_types;
+	static std::vector<VarElement> m_curVarTable;
 	static std::vector<VarElement> m_varTable;
+	static std::vector<FunctionTable*> m_funcTables;
 
 	static void CreateArithmeticExpression();
 	static void CreateConditionExpression();
 
 	static Operator GetOperatorByString(const std::string &opString);
+	static VarType GetType(TokenType type);
+
+	static std::ofstream cmdWriter;
+	static void LogVarType(VarType type);
 };

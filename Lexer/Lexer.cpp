@@ -8,10 +8,6 @@
 
 using namespace std;
 
-static const vector<TokenType> complexTokens =
-	{ TokenType::IDENTIFIER, TokenType::INTEGER_DEC_NUMBER, TokenType::FLOAT_NUMBER,
-	  TokenType::CHARACTER, TokenType::STRING };
-
 set<string>::const_iterator FindDelimiter(const string &s, size_t start)
 {
 	for (size_t i = 3; i > 0; --i)
@@ -29,6 +25,10 @@ set<string>::const_iterator FindDelimiter(const string &s, size_t start)
 
 bool DetermineTokenType(const string &token, TokenType &newTokenType)
 {
+	static const vector<TokenType> complexTokens =
+	{ TokenType::IDENTIFIER, TokenType::INTEGER_DEC_NUMBER, TokenType::FLOAT_NUMBER,
+	TokenType::CHARACTER, TokenType::STRING };
+
 	if (reservedTokens.count(token) > 0)
 	{
 		newTokenType = reservedTokens[token];
@@ -69,7 +69,7 @@ bool DetermineToken(const string &token, Token &newToken)
 	return false;
 }
 
-vector<Token> RecognizeTokens(const string &token/*, TokenType prevTokenType*/)
+vector<Token> RecognizeTokens(const string &token)
 {
 	vector<Token> res;
 	string curToken = "";
@@ -96,7 +96,7 @@ vector<Token> RecognizeTokens(const string &token/*, TokenType prevTokenType*/)
 			}
 		}
 		i++;
-		
+
 		if (it != delimiters.end())
 		{
 			Token newToken("", TokenType::ERROR);
@@ -104,25 +104,6 @@ vector<Token> RecognizeTokens(const string &token/*, TokenType prevTokenType*/)
 
 			if (*it == "+" || *it == "-")
 			{
-				/*bool isPrevTokenTypeInComplex = false;
-				if (found && newToken.type != TokenType::ERROR)
-				{
-					prevTokenType = newToken.type;
-				}
-				for each (TokenType type in complexTokens)  // roflovelosiped
-				{
-					if (prevTokenType == type)
-					{
-						isPrevTokenTypeInComplex = true;
-						break;
-					}
-				}
-				if (!isPrevTokenTypeInComplex)
-				{
-					curToken += c;
-					continue;
-				}
-				*/
 				if (curToken != "" && newToken.type != TokenType::IDENTIFIER)
 				{
 					curToken += c;
@@ -148,15 +129,13 @@ vector<Token> RecognizeTokens(const string &token/*, TokenType prevTokenType*/)
 			{
 				return res;
 			}
-
-			//prevTokenType = reservedTokens[*it];
 			res.push_back(Token(*it, reservedTokens[*it]));
 			i += (it->length() - 1);
 			strToken.IncIndex(it->length() - 1);
 			curToken = "";
 		}
 	}
-	
+
 	if (curToken != "")
 	{
 		Token newToken("", TokenType::ERROR);
@@ -213,23 +192,26 @@ LEX_DLL_API LexerResult ParseFile(const string &fNameInput)
 	}
 
 	string errString = "";
-	//TokenType prevTokenType = TokenType::INT; // roflokostil
 	while (!lexer.IsEOF())
 	{
 		auto &tokenGroup = lexer.GetNextTokenGroup();
 		TokenLine newTokenLine = TokenLine(RecognizeTokens(tokenGroup.tokenString), tokenGroup.row);
 		ParseTokenLine(newTokenLine);
-		//prevTokenType = newTokenLine.tokens.back().type;
 		table.push_back(newTokenLine);
-		
+	while (!lexer.IsEOF())
+	{
+		auto &tokenGroup = lexer.GetNextTokenGroup();
+		table.push_back(TokenLine(RecognizeTokens(tokenGroup.tokenString), tokenGroup.row));
+
+
 		if (table.size() > 0)
 		{
 			auto &curTokens = table[table.size() - 1].tokens;
 			if (curTokens.size() > 0 && curTokens[curTokens.size() - 1].type == TokenType::ERROR)
 			{
 				isError = true;
-				errString = "Strange lexem at " + to_string(tokenGroup.row) + 
-							" (" + curTokens[curTokens.size() - 1].tokenString + ")";
+				errString = "Strange lexem at " + to_string(tokenGroup.row) +
+					" (" + curTokens[curTokens.size() - 1].tokenString + ")";
 				break;
 			}
 		}

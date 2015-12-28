@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "TokenAutomata.h"
 
 bool IsValidIntModifier(std::string s)
@@ -10,9 +10,8 @@ bool IsValidIntModifier(std::string s)
 bool IsIntNumber(const std::string &s)
 {
 	size_t i = 0;
-	if (!isdigit(s[i]) && (s[i] != '-' && s.length() > 0) && (s[i] != '+' && s.length() > 0))
+	if (!isdigit(s[0]))
 		return false;
-	i++;
 	while (i < s.length() && isdigit(s[i]))
 	{
 		i++;
@@ -23,7 +22,7 @@ bool IsIntNumber(const std::string &s)
 	}
 	//std::string end = s.substr(i, s.length() - i);
 	//return IsValidIntModifier(end);
-	return false; //инты без модификаторов
+	return false;
 }
 
 bool IsValidEpsNotation(std::string const& s, size_t & i)
