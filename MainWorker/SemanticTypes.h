@@ -96,19 +96,20 @@ enum struct Operator
 	LOG_OR,
 	GREATER,
 	LESS,
-	EQUAl,
+	EQUAL,
 	NOT_EQUAL,
 	GREATE_OR_EQUAL,
-	LESS_OR_EQUAL
+	LESS_OR_EQUAL,
+	NOT
 };
 
 struct VarElement
 {
-	std::string name;
-	VarType type;
-	int scope;
+	std::string name = "";
+	VarType type = VarType::TYPE_VOID;
+	int scope = -1;
 
-	bool hasFirstDim, hasSecondDim;
+	bool hasFirstDim = false, hasSecondDim = false;
 	VarType firstDimType, secondDimType;
 };
 
@@ -159,13 +160,13 @@ typedef std::vector<FunctionArgument> FunctionArguments;
 struct FunctionCall
 {
 	int funcPointer = -1;
-	FunctionArguments *args;
+	FunctionArguments *args = nullptr;
 };
 
 struct VariableDescription
 {
 	bool isFunctionCall = false;
-	FunctionCall *func;
+	FunctionCall *func = nullptr;
 
 	int pointer = -1;
 

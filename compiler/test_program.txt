@@ -1,0 +1,18 @@
+void check1()
+{
+	int a;
+	char b[2];
+	float c[a];
+	string s[a + 222];
+	int d[2][33];
+	float f[a][23];
+	string g[a + 22][a];
+	int q = a + b[2];
+}
+
+int check2()
+{
+	int w = check1();
+	int e = check2();
+	float z = check3();
+}

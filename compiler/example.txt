@@ -1,7 +1,12 @@
 char newFunction(string s, char t)
 {
-	int q = 2 + 3 * 7 /(8 % 333);
-	int p = (1 + q[2][3]) *4 + w[a + b[t] * 3];
+	int a;
+	int b[2];
+	int t[a + 3];
+	float j[2][3];
+	float e[a][t];
+	int q = 2 + 3 * 3.43 /(8 % 333);
+	int p = (1 + q[2][3]) *4 + q[a + b[t] * 3];
 	u = f(a, b);
 	if (a > b)
 	{
@@ -31,7 +36,7 @@ void ae(int x)
 {
 	int p = (q(1, d + p[3][4]));
 	int u = (6 + d2(3));
-	//float er[2][44 + q * (6 + d[2 % e(3, 555 * d[6])])];
+	float er[2][44 + q * (6 + d[2 % e(3, 555 * d[6])])];
 }
 
 string qqqq() // this is 
@@ -50,9 +55,9 @@ int main(int a, string b, char c)
 {
 	a[34] = 4;
 	int q = 4;
-	//int a[4];
+	int a[4];
 	q = 12354;
-	//float er[2][44 + ww["hjfdf"] / j[i + 3][4 * g]];
+	float er[2][44 + ww["hjfdf"] / j[i + 3][4 * g]];
 		
 	int wrnjnf = 14;
 	string s = 3;
