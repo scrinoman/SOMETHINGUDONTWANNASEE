@@ -8,6 +8,7 @@
 #include "Function.h"
 #include <iostream>
 #include <fstream>
+#include <queue>
 
 class CSemantics
 {
@@ -56,7 +57,7 @@ private:
 
 	static std::stack<ComplexExpression> m_evalStack;
 	static std::stack<BooleanComplexExpression> m_boolStack;
-	static std::stack<VariableDescription*> m_varStack;
+	static std::queue<VariableDescription*> m_varStack;
 	static std::stack<VarType> m_types;
 	static std::vector<VarElement> m_curVarTable;
 	static std::vector<VarElement> m_varTable;

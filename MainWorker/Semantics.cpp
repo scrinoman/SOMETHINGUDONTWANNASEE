@@ -15,7 +15,7 @@ std::stack<CSemantics::StackType> CSemantics::m_stack;
 std::stack<void*> CSemantics::m_elems;
 std::stack<ComplexExpression> CSemantics::m_evalStack;
 std::stack<BooleanComplexExpression> CSemantics::m_boolStack;
-std::stack<VariableDescription*> CSemantics::m_varStack;
+std::queue<VariableDescription*> CSemantics::m_varStack;
 std::vector<VarElement> CSemantics::m_curVarTable;
 std::vector<VarElement> CSemantics::m_varTable;
 std::stack<VarType> CSemantics::m_types;
@@ -360,7 +360,7 @@ void CSemantics::LogDescription(const VariableDescription &desc)
 	{
 		cmdWriter << "funcCall ";
 		cmdWriter << m_funcTables[desc.func->funcPointer]->GetElement(0)->GetName() << " ";
-		int count = (*(desc.func->args)).size();
+		size_t count = (*(desc.func->args)).size();
 		cmdWriter << count << " ";
 		for (size_t i = 0; i < count; ++i)
 		{
@@ -371,7 +371,12 @@ void CSemantics::LogDescription(const VariableDescription &desc)
 	else
 	{
 		cmdWriter << "variable ";
-		cmdWriter << m_curVarTable[desc.pointer].name << " ";
+		int dim = 0;
+		if (desc.hasFirstDim) dim++;
+		if (desc.hasSecondDim) dim++;
+		cmdWriter << dim << " ";
+		cmdWriter << desc.pointer << " ";
+		LogVarType(m_curVarTable[desc.pointer].type);
 		if (desc.hasFirstDim)
 		{
 			cmdWriter << "fd ";
@@ -602,6 +607,8 @@ void CSemantics::RecognizeArrayPart()
 											new VariableDescription(pointer, exp1);
 	m_varStack.push(desc);
 	m_stack.pop();
+	LogDescription(*desc);
+	cmdWriter << std::endl;
 }
 
 void CSemantics::RecognizeFuncCall()
@@ -662,6 +669,8 @@ void CSemantics::RecognizeFuncCall()
 	m_stack.pop();
 
 	m_varStack.push(desc);
+	LogDescription(*desc);
+	cmdWriter << std::endl;
 }
 
 void CSemantics::RecognizeSimpleVar()
@@ -684,6 +693,8 @@ void CSemantics::RecognizeSimpleVar()
 
 	VariableDescription *desc = new VariableDescription(pointer);
 	m_varStack.push(desc);
+	LogDescription(*desc);
+	cmdWriter << std::endl;
 }
 
 void CSemantics::RecognizeLeftPart()
@@ -708,11 +719,16 @@ void CSemantics::AddVarToTable()
 {
 	auto top = m_stack.top();
 	VarElement newVarElement;
+	int dim = 0;
+	ComplexExpression dim1, dim2;
 	if (!top.isToken)
 	{
 		if (top.label == Labels::START_ARRAY_SECOND_DIM)
 		{
+			dim++;
 			newVarElement.hasSecondDim = true;
+			dim2 = m_evalStack.top();
+			m_evalStack.pop();
 			auto curType = m_types.top();
 			if (curType != VarType::TYPE_INT)
 			{
@@ -729,6 +745,9 @@ void CSemantics::AddVarToTable()
 
 		if (top.label == Labels::START_ARRAY_FIRST_DIM)
 		{
+			dim++;
+			dim1 = m_evalStack.top();
+			m_evalStack.pop();
 			newVarElement.hasFirstDim = true;
 			auto curType = m_types.top();
 			if (curType != VarType::TYPE_INT)
@@ -783,6 +802,22 @@ void CSemantics::AddVarToTable()
 	
 	m_varTable.push_back(newVarElement);
 	m_curVarTable.push_back(newVarElement);
+
+	cmdWriter << "new_var ";
+	LogVarType(varType);
+	cmdWriter << dim << " ";
+	if (newVarElement.hasFirstDim)
+	{
+		cmdWriter << "fd ";
+		LogExpression(dim1);
+	}
+
+	if (newVarElement.hasSecondDim)
+	{
+		cmdWriter << " sd ";
+		LogExpression(dim2);
+	}
+	cmdWriter << std::endl;
 }
 
 Operator CSemantics::GetOperatorByString(const std::string &opString)
@@ -885,7 +920,7 @@ void CSemantics::CreateArithmeticExpression()
 										if (curTypes.top() != VarType::TYPE_FLOAT && curTypes.top() != VarType::TYPE_INT)
 										{
 											m_error = true;
-											std::cout << "SEMANTIC ERROR AT " << newExpr.elems.back().constToken.tokenString;
+											std::cout << "Unary minus ?" << newExpr.elems.back().constToken.tokenString;
 											break;
 										}
 									}
@@ -900,7 +935,7 @@ void CSemantics::CreateArithmeticExpression()
 											(secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_FLOAT) || (secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_INT)))
 										{
 											m_error = true;
-											std::cout << "SEMANTIC ERROR AT EXPRESSION" << std::endl;
+											std::cout << "Wrong arithmetic expression" << std::endl;
 											break;
 										}
 										else
@@ -934,7 +969,7 @@ void CSemantics::CreateArithmeticExpression()
 									if (curTypes.top() != VarType::TYPE_FLOAT && curTypes.top() != VarType::TYPE_INT)
 									{
 										m_error = true;
-										std::cout << "SEMANTIC ERROR AT " << newExpr.elems.back().constToken.tokenString;
+										std::cout << "Unary minus ?" << newExpr.elems.back().constToken.tokenString;
 										break;
 									}
 								}
@@ -949,7 +984,7 @@ void CSemantics::CreateArithmeticExpression()
 										(secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_FLOAT) || (secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_INT)))
 									{
 										m_error = true;
-										std::cout << "SEMANTIC ERROR AT EXPRESSION" << std::endl;
+										std::cout << "Wrong arithmetic expression" << std::endl;
 										break;
 									}
 									else
@@ -981,7 +1016,7 @@ void CSemantics::CreateArithmeticExpression()
 		{
 			if (elem.label == Labels::START_VAR_DESRIBE)
 			{
-				auto varPoint = m_varStack.top();
+				auto varPoint = m_varStack.front();
 				m_varStack.pop();
 				newExpr.elems.push_back(varPoint);
 
@@ -1013,7 +1048,7 @@ void CSemantics::CreateArithmeticExpression()
 			if (curTypes.top() != VarType::TYPE_FLOAT && curTypes.top() != VarType::TYPE_INT)
 			{
 				m_error = true;
-				std::cout << "SEMANTIC ERROR AT " << newExpr.elems.back().constToken.tokenString;
+				std::cout << "Unary minus ?" << newExpr.elems.back().constToken.tokenString;
 				break;
 			}
 		}
@@ -1028,7 +1063,7 @@ void CSemantics::CreateArithmeticExpression()
 				(secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_FLOAT) || (secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_INT)))
 			{
 				m_error = true;
-				std::cout << "SEMANTIC ERROR AT EXPRESSION" << std::endl;
+				std::cout << "Wrong arithmetic expression" << std::endl;
 				break;
 			}
 			else

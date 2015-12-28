@@ -1,4 +1,9 @@
 func main void 0 
+new_var int 0 
+new_var int 0 
+new_var int 0 
+variable 0 0 int 
+variable 0 1 int 
 output expression int 5 CONST_INTEGER 2 CONST_INTEGER 3 op + CONST_INTEGER 5 op +
 output expression float 1 CONST_FLOAT 3.4
 output expression char 1 CONST_CHARACTER 'a'

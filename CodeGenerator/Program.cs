@@ -12,6 +12,44 @@ namespace CodeGenerator
 {
     class Program
     {
+        static string[] Split(string s)
+        {
+            List<string> res = new List<string>();
+            bool isInChar = false, isInString = false;
+            string cur = "";
+            for (int i = 0; i < s.Length; ++i)
+            {
+                if (s[i] == ' ' && !isInChar && !isInString)
+                {
+                    if (cur != "")
+                    {
+                        res.Add(cur);
+                        cur = "";
+                    }
+                }
+                else
+                {
+                    if (s[i] == '\'' && !isInString)
+                    {
+                        isInChar = !isInChar;
+                    }
+
+                    if (s[i] == '\"' && !isInChar)
+                    {
+                        isInString = !isInString;
+                    }
+
+                    cur += s[i];
+                }
+            }
+            if (cur != "")
+            {
+                res.Add(cur);
+            }
+
+            return res.ToArray();
+        }
+
         static OpCode GetOpCodeForOperator(string op)
         {
             if (op == "+") return OpCodes.Add;
@@ -46,6 +84,7 @@ namespace CodeGenerator
         static void CreateExpression(ILGenerator gen, string[] commands)
         {
             string type = commands[1];
+            
             int commandsSize = Convert.ToInt32(commands[2].ToString());
             Stack<int> curStack;
             int pointer = 3;
@@ -81,7 +120,7 @@ namespace CodeGenerator
                             {
                                 if (commands[pointer] == "CONST_STRING")
                                 {
-                                    gen.Emit(OpCodes.Ldstr, commands[pointer + 1]);
+                                    gen.Emit(OpCodes.Ldstr, commands[pointer + 1].Substring(1, commands[pointer + 1].Length - 2));
                                     pointer += 2;
                                 }
                                 else
@@ -111,10 +150,10 @@ namespace CodeGenerator
             TypeBuilder prog = module.DefineType("Program", TypeAttributes.Class | TypeAttributes.Public);
             MethodBuilder builder = prog.DefineMethod("STRANGE_USELESS_METHOD_ONLY_FOR_THIS_LINE", MethodAttributes.HideBySig);
             builder.GetILGenerator().Emit(OpCodes.Ret);
-
+            
             foreach (string line in lines)
             {
-                string[] tokens = line.Split(' ');
+                string[] tokens = Split(line);
                 if (tokens[0] == "func")
                 {
                     string funcName = tokens[1];
@@ -127,6 +166,7 @@ namespace CodeGenerator
                     }
 
                     builder = CreateNewMethod(prog, funcName, retType, types);
+                    
                     if (funcName == "main")
                     {
                         build.SetEntryPoint(builder, PEFileKinds.ConsoleApplication);
