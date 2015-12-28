@@ -70,4 +70,7 @@ private:
 
 	static std::ofstream cmdWriter;
 	static void LogVarType(VarType type);
+	static void LogExpression(const ComplexExpression &exp);
+	static void LogDescription(const VariableDescription &exp);
+	static std::string GetOPString(Operator op);
 };

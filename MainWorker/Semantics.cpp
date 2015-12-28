@@ -79,14 +79,12 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			auto labelType = curElem.label;
 			switch (labelType)
 			{
-			case START_CODE:
-				break;
 			case END_CODE:
 				break;
 			case FUNCTION_START:
 				break;
 			case FUNCTION_END:
-				cmdWriter << "func end" << std::endl;
+				cmdWriter << "func_end" << std::endl;
 				break;
 			case FUNCTION_START_DECL:
 				break;
@@ -122,7 +120,14 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case START_OUTPUT:
 				break;
 			case END_OUTPUT:
+			{
+				cmdWriter << "output ";
+				LogExpression(m_evalStack.top());
+				m_evalStack.pop();
+				m_types.pop();
+				cmdWriter << std::endl;
 				break;
+			}
 			case START_WHILE:
 				break;
 			case END_WHILE:
@@ -289,6 +294,128 @@ void CSemantics::LogVarType(VarType type)
 	cmdWriter << " ";
 }
 
+std::string CSemantics::GetOPString(Operator op)
+{
+	switch (op)
+	{
+	case Operator::PLUS:
+		return "+";
+		break;
+	case Operator::MINUS:
+		return "-";
+		break;
+	case Operator::OR:
+		return "|";
+		break;
+	case Operator::MOD:
+		return "%";
+		break;
+	case Operator::MULT:
+		return "*";
+		break;
+	case Operator::DIV:
+		return "/";
+		break;
+	case Operator::UNARY_MINUS:
+		return "unary minus";
+		break;
+	case Operator::AND:
+		return "&";
+		break;
+	case Operator::LOG_AND:
+		return "&&";
+		break;
+	case Operator::LOG_OR:
+		return "||";
+		break;
+	case Operator::GREATER:
+		return ">";
+		break;
+	case Operator::LESS:
+		return "<";
+		break;
+	case Operator::EQUAL:
+		return "==";
+		break;
+	case Operator::NOT_EQUAL:
+		return "!=";
+		break;
+	case Operator::GREATER_OR_EQUAL:
+		return ">=";
+		break;
+	case Operator::LESS_OR_EQUAL:
+		return "<=";
+		break;
+	case Operator::NOT:
+		return "!";
+		break;
+	default:
+		break;
+	}
+}
+
+void CSemantics::LogDescription(const VariableDescription &desc)
+{
+	if (desc.isFunctionCall)
+	{
+		cmdWriter << "funcCall ";
+		cmdWriter << m_funcTables[desc.func->funcPointer]->GetElement(0)->GetName() << " ";
+		int count = (*(desc.func->args)).size();
+		cmdWriter << count << " ";
+		for (size_t i = 0; i < count; ++i)
+		{
+			LogExpression((*(desc.func->args))[i].exp);
+			cmdWriter << " ";
+		}
+	}
+	else
+	{
+		cmdWriter << "variable ";
+		cmdWriter << m_curVarTable[desc.pointer].name << " ";
+		if (desc.hasFirstDim)
+		{
+			cmdWriter << "fd ";
+			LogExpression(desc.firstDim);
+		}
+
+		if (desc.hasSecondDim)
+		{
+			cmdWriter << " sd ";
+			LogExpression(desc.secondDim);
+		}
+	}
+}
+
+void CSemantics::LogExpression(const ComplexExpression &exp)
+{
+	cmdWriter << "expression ";
+	LogVarType(exp.type);
+	cmdWriter << exp.elems.size() << " ";
+	for (size_t i = 0; i < exp.elems.size(); ++i)
+	{
+		if (exp[i].isOperator)
+		{
+			cmdWriter << "op " << GetOPString(exp[i].op);
+		}
+		else
+		{
+			if (exp[i].isConst)
+			{
+				cmdWriter << exp[i].constToken.strType << " " << exp[i].constToken.tokenString;
+			}
+			else
+			{
+				LogDescription(*(exp[i].desc));
+			}
+		}
+
+		if (i < exp.elems.size() - 1)
+		{
+			cmdWriter << " ";
+		}
+	}
+}
+
 void CSemantics::CreateFunction()
 {
 	auto paramTable = static_cast<ParamTable*>(m_elems.top());
@@ -340,7 +467,7 @@ void CSemantics::CreateFunction()
 	funcTable->AddElement(new CFunction(funcName, varType, paramTable));
 	m_funcTables.push_back(funcTable);
 
-	cmdWriter << "func ";
+	cmdWriter << "func " << funcName << " ";
 	LogVarType(varType);
 	cmdWriter << paramTable->GetCount() << " ";
 	for (size_t i = 0; i < paramTable->GetCount(); ++i)
@@ -728,7 +855,7 @@ void CSemantics::CreateArithmeticExpression()
 			if (elem.token.type == TokenType::INTEGER_DEC_NUMBER || elem.token.type == TokenType::FLOAT_NUMBER ||
 				elem.token.type == TokenType::STRING || elem.token.type == TokenType::CHARACTER)
 			{
-				newExpr.push_back(elem.token);
+				newExpr.elems.push_back(elem.token);
 				curTypes.push(GetType(elem.token.type));
 			}
 			else
@@ -744,7 +871,7 @@ void CSemantics::CreateArithmeticExpression()
 						while (!reverseNotationStack.top().isConst || reverseNotationStack.top().constToken.tokenString != "(")
 						{
 							auto newElem = reverseNotationStack.top();
-							newExpr.push_back(newElem);
+							newExpr.elems.push_back(newElem);
 							if (newElem.isConst)
 							{
 								curTypes.push(GetType(newElem.constToken.type));
@@ -758,7 +885,7 @@ void CSemantics::CreateArithmeticExpression()
 										if (curTypes.top() != VarType::TYPE_FLOAT && curTypes.top() != VarType::TYPE_INT)
 										{
 											m_error = true;
-											std::cout << "SEMANTIC ERROR AT " << newExpr.back().constToken.tokenString;
+											std::cout << "SEMANTIC ERROR AT " << newExpr.elems.back().constToken.tokenString;
 											break;
 										}
 									}
@@ -807,7 +934,7 @@ void CSemantics::CreateArithmeticExpression()
 									if (curTypes.top() != VarType::TYPE_FLOAT && curTypes.top() != VarType::TYPE_INT)
 									{
 										m_error = true;
-										std::cout << "SEMANTIC ERROR AT " << newExpr.back().constToken.tokenString;
+										std::cout << "SEMANTIC ERROR AT " << newExpr.elems.back().constToken.tokenString;
 										break;
 									}
 								}
@@ -836,7 +963,7 @@ void CSemantics::CreateArithmeticExpression()
 										curTypes.push(minType);
 									}
 								}
-								newExpr.push_back(lastOP);
+								newExpr.elems.push_back(lastOP);
 								reverseNotationStack.pop();
 							}
 							else
@@ -856,7 +983,7 @@ void CSemantics::CreateArithmeticExpression()
 			{
 				auto varPoint = m_varStack.top();
 				m_varStack.pop();
-				newExpr.push_back(varPoint);
+				newExpr.elems.push_back(varPoint);
 
 				if (varPoint->isFunctionCall)
 				{
@@ -878,7 +1005,7 @@ void CSemantics::CreateArithmeticExpression()
 	while (!reverseNotationStack.empty() && !m_error)
 	{
 		auto newElem = reverseNotationStack.top();
-		newExpr.push_back(newElem);
+		newExpr.elems.push_back(newElem);
 		assert(newElem.isOperator);
 		
 		if (newElem.op == Operator::UNARY_MINUS)
@@ -886,7 +1013,7 @@ void CSemantics::CreateArithmeticExpression()
 			if (curTypes.top() != VarType::TYPE_FLOAT && curTypes.top() != VarType::TYPE_INT)
 			{
 				m_error = true;
-				std::cout << "SEMANTIC ERROR AT " << newExpr.back().constToken.tokenString;
+				std::cout << "SEMANTIC ERROR AT " << newExpr.elems.back().constToken.tokenString;
 				break;
 			}
 		}
@@ -921,6 +1048,7 @@ void CSemantics::CreateArithmeticExpression()
 
 	if (!m_error)
 	{
+		newExpr.type = curTypes.top();
 		m_evalStack.push(newExpr);
 		assert(curTypes.size() == 1);
 		m_types.push(curTypes.top());

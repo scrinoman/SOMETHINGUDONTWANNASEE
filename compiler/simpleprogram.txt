@@ -1,3 +1,9 @@
-int main()
+void main()
 {
+	cout << 2 + 3 + 5;
+	cout << 3.4;
+	cout << 'a';
+	cout << "HELLO WORLD !";
+	cout << 3.2 * 3;
+	cout << 2.5 * 2.5;
 }

@@ -144,7 +144,18 @@ struct ComplexExpressionElement
 	}
 };
 
-typedef std::vector<ComplexExpressionElement> ComplexExpression;
+struct ComplexExpression
+{
+	std::vector<ComplexExpressionElement> elems;
+	VarType type;
+
+	ComplexExpressionElement operator[](size_t index) const
+	{
+		return elems[index];
+	}
+};
+
+//typedef std::vector<ComplexExpressionElement> ComplexExpression;
 
 struct BooleanExpressionElement
 {
