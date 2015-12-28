@@ -14,6 +14,7 @@ bool CSemantics::m_error = false;
 std::stack<CSemantics::StackType> CSemantics::m_stack;
 std::stack<void*> CSemantics::m_elems;
 std::stack<ComplexExpression> CSemantics::m_evalStack;
+std::stack<BooleanComplexExpression> CSemantics::m_boolStack;
 std::stack<VariableDescription*> CSemantics::m_varStack;
 std::vector<VarElement> CSemantics::m_curVarTable;
 std::vector<VarElement> CSemantics::m_varTable;
@@ -43,7 +44,9 @@ const std::set<TokenType> CSemantics::m_forbiddenSymbols = {
 const std::map < Operator, int > CSemantics::m_operationPrior = {
 	{ Operator::PLUS, 0 }, { Operator::MINUS, 0 }, { Operator::OR, 0 }, { Operator::MOD, 0 }, 
 	{ Operator::MULT, 1 }, { Operator::DIV, 1 }, { Operator::AND, 1 }, {Operator::UNARY_MINUS, 2},
-	{ Operator::LOG_AND, 0 }, { Operator::LOG_OR, 0 }
+	{ Operator::LOG_AND, 0 }, { Operator::LOG_OR, 0 },
+	{ Operator::GREATER, 1 }, { Operator::GREATER_OR_EQUAL, 1 }, { Operator::LESS, 1 }, { Operator::LESS_OR_EQUAL, 1 },
+	{ Operator::EQUAL, 1 }, { Operator::NOT_EQUAL, 1 }, { Operator::NOT, 2 }
 };
 
 void CSemantics::Push(CSemantics::StackType &&element)
@@ -179,15 +182,20 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				break;
 			case END_FUNCTION_ARGUMENTS:
 			{
-				FunctionArguments *args = new FunctionArguments();
 				std::stack<FunctionArgument> tempStack;
 				while (m_stack.top().label != Labels::START_FUNCTION_ARGUMENTS)
 				{
+					if (m_stack.top().label == Labels::END_FUNCTION_ARG)
+					{
+						tempStack.emplace(m_evalStack.top(), m_types.top());
+						m_evalStack.pop();
+						m_types.pop();
+					}
 					m_stack.pop();
-					tempStack.push(m_evalStack.top());
-					m_evalStack.pop();
 				}
 				m_stack.pop();
+
+				FunctionArguments *args = new FunctionArguments();
 				while (!tempStack.empty())
 				{
 					args->push_back(tempStack.top());
@@ -198,11 +206,15 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				break;
 			}
 			case END_FUNCTION_ARG:
+			{
 				while (m_stack.top().label != Labels::START_FUNCTION_ARG)
 				{
 					m_stack.pop();
 				}
+				m_stack.pop();
+				m_stack.push(Labels::END_FUNCTION_ARG); // просто костыль для пустого списка аргументов (непарный енд)
 				break;
+			}
 			case START_FIRST_DIM:
 				break;
 			case END_FIRST_DIM:
@@ -291,14 +303,23 @@ void CSemantics::CreateFunction()
 
 void CSemantics::CreateParamList()
 {
-	ParamTable *paramTable = new ParamTable();
+	std::stack<CParam*> tempStack;
 	while (m_stack.top().label != Labels::FUNCTION_START_PARAM_LIST)
 	{
-		paramTable->AddElement(static_cast<CParam*>(m_elems.top()));
+		//paramTable->AddElement(static_cast<CParam*>(m_elems.top()));
+		tempStack.push(static_cast<CParam*>(m_elems.top()));
 		m_elems.pop();
 		m_stack.pop();
 	}
 	m_stack.pop();
+
+	ParamTable *paramTable = new ParamTable();
+	while (!tempStack.empty())
+	{
+		auto elem = tempStack.top();
+		paramTable->AddElement(std::move(elem));
+		tempStack.pop();
+	}
 
 	m_elems.push((void*)paramTable);
 }
@@ -336,9 +357,9 @@ void CSemantics::CreateParam()
 
 int CSemantics::GetVarInTable(const std::string &varName)
 {
-	for (size_t i = 0; i < m_varTable.size(); ++i)
+	for (size_t i = 0; i < m_curVarTable.size(); ++i)
 	{
-		if (m_varTable[i].name == varName)
+		if (m_curVarTable[i].name == varName)
 		{
 			return i;
 		}
@@ -354,24 +375,43 @@ void CSemantics::RecognizeArrayPart()
 	auto top = m_stack.top();
 	bool hasFirst = false, hasSecond = false;
 	ComplexExpression exp1, exp2;
+	VarType firstType, secondType;
 	if (top.label == Labels::START_ARRAY_SECOND_DIM)
 	{
 		hasSecond = true;
 		exp2 = m_evalStack.top();
 		m_evalStack.pop();
 		m_stack.pop();
+		secondType = m_types.top();
+		m_types.pop();
 	}
 
 	m_stack.pop();
 	hasFirst = true;
 	exp1 = m_evalStack.top();
 	m_evalStack.pop();
+	firstType = m_types.top();
+	m_types.pop();
 
 	int pointer = GetVarInTable(m_stack.top().token.tokenString);
-	if ((m_varTable[pointer].hasSecondDim && !hasSecond) || (!m_varTable[pointer].hasSecondDim && hasSecond))
+	if ((m_curVarTable[pointer].hasSecondDim && !hasSecond) || (!m_curVarTable[pointer].hasSecondDim && hasSecond))
 	{
 		m_error = true;
 		std::cout << "Dimensions don't match for " << m_stack.top().token.tokenString << std::endl;
+		return;
+	}
+
+	if (m_curVarTable[pointer].firstDimType != firstType)
+	{
+		m_error = true;
+		std::cout << "Wrong type for first dimension " << m_stack.top().token.tokenString << std::endl;
+		return;
+	}
+
+	if (hasSecond && m_curVarTable[pointer].secondDimType != secondType)
+	{
+		m_error = true;
+		std::cout << "Wrong type for second dimension " << m_stack.top().token.tokenString << std::endl;
 		return;
 	}
 
@@ -409,6 +449,30 @@ void CSemantics::RecognizeFuncCall()
 		return;
 	}
 
+	for (size_t i = 0; i < m_funcTables[call->funcPointer]->GetCount(); ++i)
+	{
+		auto func = m_funcTables[call->funcPointer]->GetElement(i);
+		auto params = func->GetParams();
+		size_t paramCount = params->GetCount();
+		if (paramCount != (*(call->args)).size())
+		{
+			m_error = true;
+			std::cout << "Wrong argument count passed to " << top.token.tokenString << std::endl;
+			return;
+		}
+		for (size_t j = 0; j < paramCount; ++j)
+		{
+			auto funcType = params->GetElement(j)->GetType();
+			auto gotType = (*(call->args))[j].type;
+			if (!(funcType == gotType || (funcType == VarType::TYPE_FLOAT && gotType == VarType::TYPE_INT)))
+			{
+				m_error = true;
+				std::cout << "Wrong argument type at " << j + 1 << std::endl;
+				return;
+			}
+		}
+	}
+
 	VariableDescription *desc = new VariableDescription();
 	desc->func = call;
 	desc->isFunctionCall = true;
@@ -423,7 +487,7 @@ void CSemantics::RecognizeSimpleVar()
 	m_stack.pop();
 
 	int pointer = GetVarInTable(top.token.tokenString);
-	if (m_varTable[pointer].hasFirstDim)
+	if (m_curVarTable[pointer].hasFirstDim)
 	{
 		m_error = true;
 		std::cout << "Missing [ after variable " << top.token.tokenString << std::endl;
@@ -546,7 +610,7 @@ Operator CSemantics::GetOperatorByString(const std::string &opString)
 	if (opString == "&&") return Operator::LOG_AND;
 	if (opString == "||") return Operator::LOG_OR;
 	if (opString == ">") return Operator::GREATER;
-	if (opString == ">=") return Operator::GREATE_OR_EQUAL;
+	if (opString == ">=") return Operator::GREATER_OR_EQUAL;
 	if (opString == "<") return Operator::LESS;
 	if (opString == "<=") return Operator::LESS_OR_EQUAL;
 	if (opString == "==") return Operator::EQUAL;
@@ -739,7 +803,7 @@ void CSemantics::CreateArithmeticExpression()
 				}
 				else
 				{
-					curTypes.push(m_varTable[varPoint->pointer].type);
+					curTypes.push(m_curVarTable[varPoint->pointer].type);
 				}
 			}
 		}
@@ -804,5 +868,255 @@ void CSemantics::CreateArithmeticExpression()
 
 void CSemantics::CreateConditionExpression()
 {
+	BooleanComplexExpression newExpr;
+	std::stack<BooleanExpressionElement> reverseNotationStack;
 
+	std::stack<StackType> tempStack;
+	while (m_stack.top().label != Labels::START_COND_EXPR)
+	{
+		tempStack.push(m_stack.top());
+		m_stack.pop();
+	}
+
+	std::stack<VarType> curTypes;
+	while (!tempStack.empty() && !m_error)
+	{
+		auto elem = tempStack.top();
+		tempStack.pop();
+		if (elem.isToken)
+		{
+			if (elem.token.type == TokenType::INTEGER_DEC_NUMBER || elem.token.type == TokenType::FLOAT_NUMBER ||
+				elem.token.type == TokenType::STRING || elem.token.type == TokenType::CHARACTER)
+			{
+				newExpr.push_back(elem.token);
+				curTypes.push(GetType(elem.token.type));
+			}
+			else
+			{
+				if (elem.token.tokenString == "(")
+				{
+					reverseNotationStack.push(elem.token);
+				}
+				else
+				{
+					if (elem.token.tokenString == ")")
+					{
+						while ((reverseNotationStack.top().type != BooleanExpressionElement::ExpType::EXPRESSION_CONST) || 
+								reverseNotationStack.top().constToken.tokenString != "(")
+						{
+							auto newElem = reverseNotationStack.top();
+							newExpr.push_back(newElem);
+							if (newElem.type == BooleanExpressionElement::ExpType::EXPRESSION_CONST)
+							{
+								curTypes.push(GetType(newElem.constToken.type));
+							}
+							else
+							{
+								if (newElem.type == BooleanExpressionElement::ExpType::EXPRESSION_OPERATOR)
+								{
+									if (newElem.op == Operator::NOT)
+									{
+										if (curTypes.top() != VarType::TYPE_BOOL)
+										{
+											m_error = true;
+											std::cout << "Wrong condition in " << newExpr.back().constToken.tokenString;
+											break;
+										}
+									}
+									else
+									{
+										auto secArg = curTypes.top();
+										curTypes.pop();
+										auto firstArg = curTypes.top();
+										curTypes.pop();
+
+										if (newElem.op == Operator::LOG_AND || newElem.op == Operator::LOG_AND)
+										{
+											if (!(firstArg == VarType::TYPE_BOOL && secArg == VarType::TYPE_BOOL))
+											{
+												m_error = true;
+												std::cout << "Wrong condition comparision" << std::endl;
+												break;
+											}
+											else
+											{
+												VarType minType = VarType::TYPE_BOOL;
+												curTypes.push(minType);
+											}
+										}
+										else
+										{
+											if (!((secArg == VarType::TYPE_FLOAT && firstArg == VarType::TYPE_FLOAT) || (secArg == VarType::TYPE_FLOAT && firstArg == VarType::TYPE_INT) ||
+												(secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_FLOAT) || (secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_INT)))
+											{
+												m_error = true;
+												std::cout << "Wrong condition comparision" << std::endl;
+												break;
+											}
+											else
+											{
+												VarType minType = VarType::TYPE_BOOL;
+												curTypes.push(minType);
+											}
+										}
+									}
+								}
+							}
+							reverseNotationStack.pop();
+						}
+						reverseNotationStack.pop();
+					}
+					else //must be operator
+					{
+						auto opString = elem.token.tokenString;
+
+						while (!reverseNotationStack.empty() && 
+								reverseNotationStack.top().type == BooleanExpressionElement::ExpType::EXPRESSION_OPERATOR)
+						{
+							auto lastOP = reverseNotationStack.top();
+							if (m_operationPrior.at(lastOP.op) >= m_operationPrior.at(GetOperatorByString(opString)))
+							{
+								if (lastOP.op == Operator::NOT)
+								{
+									if (curTypes.top() != VarType::TYPE_BOOL)
+									{
+										m_error = true;
+										std::cout << "Wrong condition in " << newExpr.back().constToken.tokenString;
+										break;
+									}
+								}
+								else
+								{
+									auto secArg = curTypes.top();
+									curTypes.pop();
+									auto firstArg = curTypes.top();
+									curTypes.pop();
+
+									if (lastOP.op == Operator::LOG_AND || lastOP.op == Operator::LOG_AND)
+									{
+										if (!(firstArg == VarType::TYPE_BOOL && secArg == VarType::TYPE_BOOL))
+										{
+											m_error = true;
+											std::cout << "Wrong condition comparision" << std::endl;
+											break;
+										}
+										else
+										{
+											VarType minType = VarType::TYPE_BOOL;
+											curTypes.push(minType);
+										}
+									}
+									else
+									{
+										if (!((secArg == VarType::TYPE_FLOAT && firstArg == VarType::TYPE_FLOAT) || (secArg == VarType::TYPE_FLOAT && firstArg == VarType::TYPE_INT) ||
+											(secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_FLOAT) || (secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_INT)))
+										{
+											m_error = true;
+											std::cout << "Wrong condition comparision" << std::endl;
+											break;
+										}
+										else
+										{
+											VarType minType = VarType::TYPE_BOOL;
+											curTypes.push(minType);
+										}
+									}
+								}
+								newExpr.push_back(lastOP);
+								reverseNotationStack.pop();
+							}
+							else
+							{
+								break;
+							}
+						}
+
+						reverseNotationStack.push(GetOperatorByString(elem.token.tokenString));
+					}
+				}
+			}
+		}
+		else
+		{
+			if (elem.label == Labels::START_ARITHMETIC_OPERATION)
+			{
+				auto evalStack = m_evalStack.top();
+				m_evalStack.pop();
+				newExpr.push_back(evalStack);
+
+				auto type = m_types.top();
+				m_types.pop();
+
+				curTypes.push(type);
+			}
+		}
+	}
+
+	if (m_error)
+	{
+		return;
+	}
+
+	while (!reverseNotationStack.empty() && !m_error)
+	{
+		auto newElem = reverseNotationStack.top();
+		newExpr.push_back(newElem);
+		assert(newElem.type == BooleanExpressionElement::ExpType::EXPRESSION_OPERATOR);
+
+		if (newElem.op == Operator::NOT)
+		{
+			if (curTypes.top() != VarType::TYPE_BOOL)
+			{
+				m_error = true;
+				std::cout << "Wrong condition in " << newExpr.back().constToken.tokenString << " after NOT" << std::endl;
+				break;
+			}
+		}
+		else
+		{
+			auto secArg = curTypes.top();
+			curTypes.pop();
+			auto firstArg = curTypes.top();
+			curTypes.pop();
+
+			if (newElem.op == Operator::LOG_AND || newElem.op == Operator::LOG_AND)
+			{
+				if (!(firstArg == VarType::TYPE_BOOL && secArg == VarType::TYPE_BOOL))
+				{
+					m_error = true;
+					std::cout << "Wrong condition comparision" << std::endl;
+					break;
+				}
+				else
+				{
+					VarType minType = VarType::TYPE_BOOL;
+					curTypes.push(minType);
+				}
+			}
+			else
+			{
+				if (!((secArg == VarType::TYPE_FLOAT && firstArg == VarType::TYPE_FLOAT) || (secArg == VarType::TYPE_FLOAT && firstArg == VarType::TYPE_INT) ||
+					(secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_FLOAT) || (secArg == VarType::TYPE_INT && firstArg == VarType::TYPE_INT)))
+				{
+					m_error = true;
+					std::cout << "Wrong condition comparision" << std::endl;
+					break;
+				}
+				else
+				{
+					VarType minType = VarType::TYPE_BOOL;
+					curTypes.push(minType);
+				}
+			}
+		}
+
+		reverseNotationStack.pop();
+	}
+
+	if (!m_error)
+	{
+		m_boolStack.push(newExpr);
+		assert(curTypes.size() == 1);
+		m_types.push(curTypes.top());
+	}
 }
