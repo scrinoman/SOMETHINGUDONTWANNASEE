@@ -129,7 +129,6 @@ vector<Token> RecognizeTokens(const string &token)
 			{
 				return res;
 			}
-
 			res.push_back(Token(*it, reservedTokens[*it]));
 			i += (it->length() - 1);
 			strToken.IncIndex(it->length() - 1);
@@ -147,6 +146,40 @@ vector<Token> RecognizeTokens(const string &token)
 	return res;
 }
 
+vector<Token> FillNewTokens(TokenLine const &line, size_t replacingIndex)
+{
+	vector<Token> tokens;
+	size_t i = 0;
+	while (i < line.tokens.size())
+	{
+		if (i == replacingIndex)
+		{
+			i++;
+			string tokenString = "-" + line.tokens[i].tokenString;
+			Token token = Token(tokenString, line.tokens[i].type);
+			tokens.push_back(token);
+		}
+		else
+		{
+			tokens.push_back(line.tokens[i]);
+		}
+		i++;
+	}
+	return tokens;
+}
+
+void ParseTokenLine(TokenLine &line)  // append unary minus to consts if needed
+{
+	for (size_t i = 0; i < line.tokens.size(); i++)
+	{
+		if (line.tokens[i].type == TokenType::MINUS && i < line.tokens.size() - 1 &&
+			(line.tokens[i + 1].type == TokenType::INTEGER_DEC_NUMBER || line.tokens[i + 1].type == TokenType::FLOAT_NUMBER || line.tokens[i + 1].type == TokenType::FLOAT))
+		{
+			line.tokens = FillNewTokens(line, i);
+		}
+	}
+}
+
 LEX_DLL_API LexerResult ParseFile(const string &fNameInput)
 {
 	TokenTable table;
@@ -162,7 +195,15 @@ LEX_DLL_API LexerResult ParseFile(const string &fNameInput)
 	while (!lexer.IsEOF())
 	{
 		auto &tokenGroup = lexer.GetNextTokenGroup();
+		TokenLine newTokenLine = TokenLine(RecognizeTokens(tokenGroup.tokenString), tokenGroup.row);
+		ParseTokenLine(newTokenLine);
+		table.push_back(newTokenLine);
+	}
+	while (!lexer.IsEOF())
+	{
+		auto &tokenGroup = lexer.GetNextTokenGroup();
 		table.push_back(TokenLine(RecognizeTokens(tokenGroup.tokenString), tokenGroup.row));
+
 
 		if (table.size() > 0)
 		{

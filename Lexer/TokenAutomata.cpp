@@ -22,7 +22,7 @@ bool IsIntNumber(const std::string &s)
 	}
 	//std::string end = s.substr(i, s.length() - i);
 	//return IsValidIntModifier(end);
-	return false; //èíòû áåç ìîäèôèêàòîðîâ
+	return false;
 }
 
 bool IsValidEpsNotation(std::string const& s, size_t & i)
@@ -58,8 +58,18 @@ bool IsValidEpsNotation(std::string const& s, size_t & i)
 bool IsFloatNumber(std::string const& s)
 {
 	size_t i = 0;
-	if (!isdigit(s[0]) && s[0] != '.')
-		return false;
+	
+	if (!isdigit(s[i]) && s[i] != '.')
+	{
+		if ((s[i] == '-' && s.length() > 0) || (s[i] == '+' && s.length() > 0))
+		{
+			i++;
+		}
+		else
+		{
+			return false;
+		}
+	}
 	while (i < s.length() && isdigit(s[i]))
 	{
 		i++;
