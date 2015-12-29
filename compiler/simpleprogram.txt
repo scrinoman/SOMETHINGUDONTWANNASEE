@@ -1,8 +1,8 @@
 void main()
 {
 	int a = 3;
-	int b[2][2];
-	int r = 2 + 3 * a - b[1][1];
+	int b[2];
+	int r = 2 + 3 * a - b[1];
 	cout << 2 + 3 + 5;
 	cout << 3.4;
 	cout << 'a';

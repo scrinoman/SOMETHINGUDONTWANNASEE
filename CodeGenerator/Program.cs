@@ -55,6 +55,9 @@ namespace CodeGenerator
             if (op == "-") return OpCodes.Sub;
             if (op == "*") return OpCodes.Mul;
             if (op == "/") return OpCodes.Div;
+            if (op == "%") return OpCodes.Rem;
+            if (op == "|") return OpCodes.Or;
+            if (op == "&") return OpCodes.And;
 
             return OpCodes.Nop;
         }
@@ -80,12 +83,45 @@ namespace CodeGenerator
                 returnType, allParams);
         }
         
-        static void CreateExpression(ILGenerator gen, string[] commands)
+        static void LoadVarValue(ILGenerator gen, string[] commands, ref int pointer)
         {
-            string type = commands[1];
+            pointer++;
+            int dim = Convert.ToInt32(commands[pointer++].ToString());
+            int varPointer = Convert.ToInt32(commands[pointer++].ToString());
+            Type type = GetTypeByString(commands[pointer++].ToString());
+            if (dim == 0)
+            {
+                gen.Emit(OpCodes.Ldloc, curLocals[varPointer]);
+            }
+            else
+            {
+                if (dim == 1)
+                {
+                    gen.Emit(OpCodes.Ldloc, curLocals[varPointer]);
+                    pointer++;
+                    CreateExpression(gen, commands, ref pointer);
+
+                    gen.Emit(OpCodes.Ldelem, type);
+                }
+                else //== todo
+                {
+                    gen.Emit(OpCodes.Ldloc, curLocals[varPointer]);
+                    pointer++;
+                    CreateExpression(gen, commands, ref pointer);
+                    pointer++;
+
+                    gen.Emit(OpCodes.Ldelem, type);
+                }
+            }
+        }
+
+        static void CreateExpression(ILGenerator gen, string[] commands, ref int startPointer)
+        {
+            string type = commands[++startPointer];
+            startPointer++;
             
-            int commandsSize = Convert.ToInt32(commands[2].ToString());
-            int pointer = 3;
+            int commandsSize = Convert.ToInt32(commands[startPointer++].ToString());
+            int pointer = startPointer;
             for (int i = 0; i < commandsSize; ++i )
             {
                 if (commands[pointer] == "op")
@@ -131,10 +167,12 @@ namespace CodeGenerator
                     }
                     else
                     {
-
+                        LoadVarValue(gen, commands, ref pointer);
                     }
                 }
             }
+
+            startPointer = pointer;
         }
 
         static void DeclareVar(ILGenerator gen, string[] args)
@@ -148,7 +186,8 @@ namespace CodeGenerator
                 if (args[2] == "1")
                 {
                     var arr = gen.DeclareLocal(GetTypeByString(args[1]));
-                    CreateExpression(gen, args.Skip(4).Take(args.Length - 4).ToArray());
+                    int pointer = 4;
+                    CreateExpression(gen, args, ref pointer);
                     gen.Emit(OpCodes.Newarr, GetTypeByString(args[1]));
                     gen.Emit(OpCodes.Stloc, arr);
                     curLocals.Add(arr);
@@ -156,7 +195,8 @@ namespace CodeGenerator
                 else
                 {
                     var arr = gen.DeclareLocal(GetTypeByString(args[1]));
-                    CreateExpression(gen, args.Skip(4).Take(args.Length - 4).ToArray());
+                    int pointer = 4;
+                    CreateExpression(gen, args, ref pointer);
                     int i = 0;
                     for (i = 0; i < args.Length; ++i )
                     {
@@ -165,7 +205,8 @@ namespace CodeGenerator
                             break;
                         }
                     }
-                    CreateExpression(gen, args.Skip(i + 1).Take(args.Length - i - 1).ToArray());
+                    pointer++;
+                    CreateExpression(gen, args, ref pointer);
                     gen.Emit(OpCodes.Mul);
                     gen.Emit(OpCodes.Newarr, GetTypeByString(args[1]));
                     gen.Emit(OpCodes.Stloc, arr);
@@ -221,9 +262,18 @@ namespace CodeGenerator
                         DeclareVar(builder.GetILGenerator(), tokens);
                     }
 
+                    if (tokens[0] == "assign")
+                    {
+                        int pointer = 1;
+                        LoadVarValue(builder.GetILGenerator(), tokens, ref pointer);
+                        var vars = tokens.Skip()
+                        CreateExpression(builder.GetILGenerator(), tokens, ref pointer);
+                    }
+
                     if (tokens[0] == "output")
                     {
-                        CreateExpression(builder.GetILGenerator(), tokens.Skip(1).ToArray());
+                        int pointer = 1;
+                        CreateExpression(builder.GetILGenerator(), tokens, ref pointer);
                         string type = tokens[2];
                         Type curType = GetTypeByString(type);
                         builder.GetILGenerator().Emit(OpCodes.Call,
