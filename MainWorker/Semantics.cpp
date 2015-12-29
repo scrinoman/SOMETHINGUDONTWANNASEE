@@ -108,7 +108,24 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case START_DECL:
 				break;
 			case END_DECL:
+			{
+				if (m_stack.top().label != Labels::START_VAR_DECL && m_stack.top().label != Labels::START_MAP_DECL)
+				{
+					auto newVar = m_curVarTable.back();
+					if (newVar.hasFirstDim)
+					{
+						m_error = 1;
+						std::cout << "Assignment to array " << newVar.name;
+						break;
+					}
+					else
+					{
+						m_varStack.push(new VariableDescription(m_curVarTable.size() - 1)); //opasno !
+						LogOpAction();
+					}
+				}
 				break;
+			}
 			case START_ASSIGN:
 				break;
 			case END_ASSIGN:
@@ -233,6 +250,32 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case END_VAR_DESCRIBE:
 				RecognizeLeftPart();
 				break;
+			case START_VAR_DECL_RIGHT:
+				break;
+			case END_VAR_DECL_RIGHT:
+			{
+				//if (m_stack.top().label == Labels::START_VAR_DECL_RIGHT)
+				//{
+				//	//m_stack.pop();
+				//}
+				//else
+				//{
+				//	auto newVar = m_curVarTable.back();
+				//	if (newVar.hasFirstDim)
+				//	{
+				//		m_error = 1;
+				//		std::cout << "Assignment to array " << newVar.name;
+				//		break;
+				//	}
+				//	else
+				//	{
+				//		m_varStack.push(new VariableDescription(m_curVarTable.size() - 1)); //opasno !
+				//		LogOpAction();
+				//	}
+				//}
+				//m_stack.pop();
+				break;
+			}
 			case LABEL_NONE:
 				break;
 			default:
@@ -354,9 +397,20 @@ std::string CSemantics::GetOPString(Operator op)
 	}
 }
 
+void CSemantics::LogOpAction()
+{
+	cmdWriter << "assign ";
+	LogDescription(*m_varStack.front());
+	m_varStack.pop();
+	cmdWriter << " ";
+	LogExpression(m_evalStack.top());
+	m_evalStack.pop();
+	cmdWriter << std::endl;
+}
+
 void CSemantics::LogDescription(const VariableDescription &desc)
 {
-	if (desc.isFunctionCall)
+	if (desc.isFunctionCall) //func name args_count <args>
 	{
 		cmdWriter << "funcCall ";
 		cmdWriter << m_funcTables[desc.func->funcPointer]->GetElement(0)->GetName() << " ";
@@ -370,7 +424,7 @@ void CSemantics::LogDescription(const VariableDescription &desc)
 	}
 	else
 	{
-		cmdWriter << "variable ";
+		cmdWriter << "variable "; //var dim pointer type desc
 		int dim = 0;
 		if (desc.hasFirstDim) dim++;
 		if (desc.hasSecondDim) dim++;
@@ -607,8 +661,8 @@ void CSemantics::RecognizeArrayPart()
 											new VariableDescription(pointer, exp1);
 	m_varStack.push(desc);
 	m_stack.pop();
-	LogDescription(*desc);
-	cmdWriter << std::endl;
+	/*LogDescription(*desc);
+	cmdWriter << std::endl;*/
 }
 
 void CSemantics::RecognizeFuncCall()
@@ -669,8 +723,8 @@ void CSemantics::RecognizeFuncCall()
 	m_stack.pop();
 
 	m_varStack.push(desc);
-	LogDescription(*desc);
-	cmdWriter << std::endl;
+	//LogDescription(*desc);
+	//cmdWriter << std::endl;
 }
 
 void CSemantics::RecognizeSimpleVar()
@@ -693,8 +747,8 @@ void CSemantics::RecognizeSimpleVar()
 
 	VariableDescription *desc = new VariableDescription(pointer);
 	m_varStack.push(desc);
-	LogDescription(*desc);
-	cmdWriter << std::endl;
+	//LogDescription(*desc);
+	//cmdWriter << std::endl;
 }
 
 void CSemantics::RecognizeLeftPart()
@@ -818,6 +872,8 @@ void CSemantics::AddVarToTable()
 		LogExpression(dim2);
 	}
 	cmdWriter << std::endl;
+
+	m_stack.pop();
 }
 
 Operator CSemantics::GetOperatorByString(const std::string &opString)

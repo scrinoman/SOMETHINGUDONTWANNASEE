@@ -73,5 +73,6 @@ private:
 	static void LogVarType(VarType type);
 	static void LogExpression(const ComplexExpression &exp);
 	static void LogDescription(const VariableDescription &exp);
+	static void LogOpAction();
 	static std::string GetOPString(Operator op);
 };

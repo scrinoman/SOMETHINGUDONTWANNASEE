@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.IO;
 using System.Globalization;
 
 namespace CodeGenerator
 {
     class Program
     {
+        static List<LocalBuilder> curLocals = new List<LocalBuilder>();
+
         static string[] Split(string s)
         {
             List<string> res = new List<string>();
@@ -86,7 +85,6 @@ namespace CodeGenerator
             string type = commands[1];
             
             int commandsSize = Convert.ToInt32(commands[2].ToString());
-            Stack<int> curStack;
             int pointer = 3;
             for (int i = 0; i < commandsSize; ++i )
             {
@@ -139,6 +137,43 @@ namespace CodeGenerator
             }
         }
 
+        static void DeclareVar(ILGenerator gen, string[] args)
+        {
+            if (args[2] == "0")
+            {
+                curLocals.Add(gen.DeclareLocal(GetTypeByString(args[1])));
+            }
+            else
+            {
+                if (args[2] == "1")
+                {
+                    var arr = gen.DeclareLocal(GetTypeByString(args[1]));
+                    CreateExpression(gen, args.Skip(4).Take(args.Length - 4).ToArray());
+                    gen.Emit(OpCodes.Newarr, GetTypeByString(args[1]));
+                    gen.Emit(OpCodes.Stloc, arr);
+                    curLocals.Add(arr);
+                }
+                else
+                {
+                    var arr = gen.DeclareLocal(GetTypeByString(args[1]));
+                    CreateExpression(gen, args.Skip(4).Take(args.Length - 4).ToArray());
+                    int i = 0;
+                    for (i = 0; i < args.Length; ++i )
+                    {
+                        if (args[i] == "sd")
+                        {
+                            break;
+                        }
+                    }
+                    CreateExpression(gen, args.Skip(i + 1).Take(args.Length - i - 1).ToArray());
+                    gen.Emit(OpCodes.Mul);
+                    gen.Emit(OpCodes.Newarr, GetTypeByString(args[1]));
+                    gen.Emit(OpCodes.Stloc, arr);
+                    curLocals.Add(arr);
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             string[] lines = System.IO.File.ReadAllLines("cmdLog.txt");
@@ -150,7 +185,8 @@ namespace CodeGenerator
             TypeBuilder prog = module.DefineType("Program", TypeAttributes.Class | TypeAttributes.Public);
             MethodBuilder builder = prog.DefineMethod("STRANGE_USELESS_METHOD_ONLY_FOR_THIS_LINE", MethodAttributes.HideBySig);
             builder.GetILGenerator().Emit(OpCodes.Ret);
-            
+            curLocals.Clear();
+
             foreach (string line in lines)
             {
                 string[] tokens = Split(line);
@@ -177,6 +213,12 @@ namespace CodeGenerator
                     if (tokens[0] == "func_end")
                     {
                         builder.GetILGenerator().Emit(OpCodes.Ret);
+                        curLocals.Clear();
+                    }
+
+                    if (tokens[0] == "new_var")
+                    {
+                        DeclareVar(builder.GetILGenerator(), tokens);
                     }
 
                     if (tokens[0] == "output")
