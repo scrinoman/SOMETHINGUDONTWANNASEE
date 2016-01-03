@@ -15,13 +15,14 @@ std::stack<CSemantics::StackType> CSemantics::m_stack;
 std::stack<void*> CSemantics::m_elems;
 std::stack<ComplexExpression> CSemantics::m_evalStack;
 std::stack<BooleanComplexExpression> CSemantics::m_boolStack;
-std::queue<VariableDescription*> CSemantics::m_varStack;
+std::stack<VariableDescription*> CSemantics::m_varStack;
 std::vector<VarElement> CSemantics::m_curVarTable;
 std::vector<VarElement> CSemantics::m_varTable;
 std::stack<VarType> CSemantics::m_types;
 std::vector<FunctionTable*> CSemantics::m_funcTables;
 std::ofstream CSemantics::cmdWriter("cmdLog.txt");
 int CSemantics::curScope = 0;
+bool CSemantics::functionHasReturn = false;
 
 const std::set<TokenType> CSemantics::m_forbiddenSymbols = {
 	reservedTokens["["],
@@ -84,8 +85,19 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case FUNCTION_START:
 				break;
 			case FUNCTION_END:
-				cmdWriter << "func_end" << std::endl;
+			{
+				if (functionHasReturn || m_funcTables.back()->GetElement(0)->GetType() == VarType::TYPE_VOID)
+				{
+					cmdWriter << "func_end" << std::endl;
+					functionHasReturn = false;
+				}
+				else
+				{
+					m_error = 1;
+					std::cout << "Function might has no return statement" << std::endl;
+				}
 				break;
+			}	
 			case FUNCTION_START_DECL:
 				break;
 			case FUNCTION_END_DECL:
@@ -129,11 +141,27 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case START_ASSIGN:
 				break;
 			case END_ASSIGN:
+				LogOpAction();
 				break;
 			case START_INPUT:
 				break;
 			case END_INPUT:
+			{
+				cmdWriter << "input ";
+				auto desc = m_varStack.top();
+				m_varStack.pop();
+				if (desc->hasFirstDim)
+				{
+					cmdWriter << "0 ";
+				}
+				else
+				{
+					cmdWriter << "1 ";
+				}
+				LogDescription(*desc);
+				cmdWriter << std::endl;
 				break;
+			}
 			case START_OUTPUT:
 				break;
 			case END_OUTPUT:
@@ -148,7 +176,16 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case START_WHILE:
 				break;
 			case END_WHILE:
+				cmdWriter << "end_while" << std::endl;
 				break;
+			case END_WHILE_COND:
+			{
+				cmdWriter << "while ";
+				LogBooleanExpression(m_boolStack.top());
+				m_boolStack.pop();
+				cmdWriter << std::endl;
+				break;
+			}
 			case START_FOR:
 				break;
 			case END_FOR:
@@ -160,7 +197,16 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case START_IF:
 				break;
 			case END_IF:
+				cmdWriter << "end_if" << std::endl;
 				break;
+			case END_IF_DECL:
+			{
+				cmdWriter << "if ";
+				LogBooleanExpression(m_boolStack.top());
+				m_boolStack.pop();
+				cmdWriter << std::endl;
+				break;
+			}
 			case START_ELSE:
 				break;
 			case END_ELSE:
@@ -168,7 +214,52 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case START_RETURN:
 				break;
 			case END_RETURN:
+			{
+				if (m_stack.top().label == Labels::START_RETURN)
+				{
+					if (m_funcTables.back()->GetElement(0)->GetType() != VarType::TYPE_VOID)
+					{
+						m_error = 1;
+						std::cout << "Expected statement after return" << std::endl;
+						break;
+					}
+					else
+					{
+						if (curScope == 1)
+						{
+							functionHasReturn = true;
+						}
+
+						cmdWriter << "return empty" << std::endl;
+					}
+				}
+				else
+				{
+					auto exp = m_evalStack.top();
+					if (IsCompatibleTypes(m_funcTables.back()->GetElement(0)->GetType(), exp.type))
+					{
+						if (curScope == 1)
+						{
+							functionHasReturn = true;
+						}
+						cmdWriter << "return ";
+						LogVarType(m_funcTables.back()->GetElement(0)->GetType());
+						LogVarType(exp.type);
+						LogExpression(exp);
+						m_evalStack.pop();
+						m_types.pop();
+						cmdWriter << std::endl;
+					}
+					else
+					{
+						m_error = 1;
+						std::cout << "Wrong return type" << std::endl;
+						break;
+					}
+					
+				}
 				break;
+			}
 			case START_VAR_DECL:
 				break;
 			case END_VAR_DECL:
@@ -254,26 +345,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				break;
 			case END_VAR_DECL_RIGHT:
 			{
-				//if (m_stack.top().label == Labels::START_VAR_DECL_RIGHT)
-				//{
-				//	//m_stack.pop();
-				//}
-				//else
-				//{
-				//	auto newVar = m_curVarTable.back();
-				//	if (newVar.hasFirstDim)
-				//	{
-				//		m_error = 1;
-				//		std::cout << "Assignment to array " << newVar.name;
-				//		break;
-				//	}
-				//	else
-				//	{
-				//		m_varStack.push(new VariableDescription(m_curVarTable.size() - 1)); //opasno !
-				//		LogOpAction();
-				//	}
-				//}
-				//m_stack.pop();
 				break;
 			}
 			case LABEL_NONE:
@@ -287,6 +358,11 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			m_stack.push(std::forward<CSemantics::StackType>(curElem));
 		}
 	}
+}
+
+bool CSemantics::IsCompatibleTypes(VarType needType, VarType gotType)
+{
+	return (needType == gotType || (needType == VarType::TYPE_FLOAT && gotType == VarType::TYPE_INT));
 }
 
 CSemantics::StackType CSemantics::Pop()
@@ -360,7 +436,7 @@ std::string CSemantics::GetOPString(Operator op)
 		return "/";
 		break;
 	case Operator::UNARY_MINUS:
-		return "unary minus";
+		return "unary_minus";
 		break;
 	case Operator::AND:
 		return "&";
@@ -400,12 +476,55 @@ std::string CSemantics::GetOPString(Operator op)
 void CSemantics::LogOpAction()
 {
 	cmdWriter << "assign ";
-	LogDescription(*m_varStack.front());
+	auto desc = m_varStack.top();
 	m_varStack.pop();
-	cmdWriter << " ";
-	LogExpression(m_evalStack.top());
-	m_evalStack.pop();
+	if (desc->hasFirstDim)
+	{
+		cmdWriter << "0 ";
+		LogDescription(*desc);
+		cmdWriter << " ";
+		LogExpression(m_evalStack.top());
+		m_evalStack.pop();
+	}
+	else
+	{
+		cmdWriter << "1 ";
+		LogExpression(m_evalStack.top());
+		m_evalStack.pop();
+		cmdWriter << " ";
+		LogDescription(*desc);
+	}
+	
 	cmdWriter << std::endl;
+}
+
+void CSemantics::LogBooleanExpression(const BooleanComplexExpression &exp)
+{
+	cmdWriter << "condition ";
+	cmdWriter << exp.size() << " ";
+	for (size_t i = 0; i < exp.size(); ++i)
+	{
+		if (exp[i].type == BooleanExpressionElement::ExpType::EXPRESSION_OPERATOR)
+		{
+			cmdWriter << "op " << GetOPString(exp[i].op);
+		}
+		else
+		{
+			if (exp[i].type == BooleanExpressionElement::ExpType::EXPRESSION_CONST)
+			{
+				cmdWriter << exp[i].constToken.strType << " " << exp[i].constToken.tokenString;
+			}
+			else
+			{
+				LogExpression(exp[i].elem);
+			}
+		}
+
+		if (i < exp.size() - 1)
+		{
+			cmdWriter << " ";
+		}
+	}
 }
 
 void CSemantics::LogDescription(const VariableDescription &desc)
@@ -636,14 +755,15 @@ void CSemantics::RecognizeArrayPart()
 		return;
 	}
 
-	if ((m_curVarTable[pointer].hasSecondDim && !hasSecond) || (!m_curVarTable[pointer].hasSecondDim && hasSecond))
+	if ((m_curVarTable[pointer].hasSecondDim && !hasSecond) || (!m_curVarTable[pointer].hasSecondDim && hasSecond) || 
+		(!m_curVarTable[pointer].hasFirstDim && m_curVarTable[pointer].type != VarType::TYPE_STRING))
 	{
 		m_error = true;
-		std::cout << "Dimensions don't match for " << m_stack.top().token.tokenString << std::endl;
+		std::cout << "Dimensions don't match for variable " << m_stack.top().token.tokenString << std::endl;
 		return;
 	}
 
-	if (m_curVarTable[pointer].firstDimType != firstType)
+	if (m_curVarTable[pointer].firstDimType != firstType && m_curVarTable[pointer].type != VarType::TYPE_STRING)
 	{
 		m_error = true;
 		std::cout << "Wrong type for first dimension " << m_stack.top().token.tokenString << std::endl;
@@ -930,9 +1050,15 @@ void CSemantics::CreateArithmeticExpression()
 	std::stack<ComplexExpressionElement> reverseNotationStack;
 
 	std::stack<StackType> tempStack;
+	std::stack<VariableDescription*> stackForVariables;
 	while (m_stack.top().label != Labels::START_ARITHMETIC_OPERATION)
 	{
 		tempStack.push(m_stack.top());
+		if (m_stack.top().label == Labels::START_VAR_DESRIBE)
+		{
+			stackForVariables.push(m_varStack.top());
+			m_varStack.pop();
+		}
 		m_stack.pop();
 	}
 
@@ -1072,8 +1198,8 @@ void CSemantics::CreateArithmeticExpression()
 		{
 			if (elem.label == Labels::START_VAR_DESRIBE)
 			{
-				auto varPoint = m_varStack.front();
-				m_varStack.pop();
+				auto varPoint = stackForVariables.top();
+				stackForVariables.pop();
 				newExpr.elems.push_back(varPoint);
 
 				if (varPoint->isFunctionCall)
@@ -1152,9 +1278,15 @@ void CSemantics::CreateConditionExpression()
 	std::stack<BooleanExpressionElement> reverseNotationStack;
 
 	std::stack<StackType> tempStack;
+	std::stack<ComplexExpression> stackForExpressions;
 	while (m_stack.top().label != Labels::START_COND_EXPR)
 	{
 		tempStack.push(m_stack.top());
+		if (m_stack.top().label == Labels::START_ARITHMETIC_OPERATION)
+		{
+			stackForExpressions.push(m_evalStack.top());
+			m_evalStack.pop();
+		}
 		m_stack.pop();
 	}
 
@@ -1320,14 +1452,14 @@ void CSemantics::CreateConditionExpression()
 		{
 			if (elem.label == Labels::START_ARITHMETIC_OPERATION)
 			{
-				auto evalStack = m_evalStack.top();
-				m_evalStack.pop();
+				auto evalStack = stackForExpressions.top();
 				newExpr.push_back(evalStack);
+				stackForExpressions.pop();
 
 				auto type = m_types.top();
 				m_types.pop();
 
-				curTypes.push(type);
+				curTypes.push(evalStack.type);
 			}
 		}
 	}

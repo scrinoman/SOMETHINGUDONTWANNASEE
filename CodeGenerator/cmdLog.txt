@@ -1,0 +1,11 @@
+func main void 0 
+new_var int 0 
+assign expression int 1 CONST_INTEGER 3 variable 0 0 int 
+output expression int 1 variable 0 0 int 
+output expression int 5 CONST_INTEGER 2 CONST_INTEGER 3 op + CONST_INTEGER 5 op +
+output expression float 1 CONST_FLOAT 3.4
+output expression char 1 CONST_CHARACTER 'a'
+output expression string 1 CONST_STRING "HELLO WORLD !"
+output expression float 3 CONST_FLOAT 3.2 CONST_INTEGER 3 op *
+output expression float 3 CONST_FLOAT 2.5 CONST_FLOAT 2.5 op *
+func_end

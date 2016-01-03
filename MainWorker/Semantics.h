@@ -57,7 +57,7 @@ private:
 
 	static std::stack<ComplexExpression> m_evalStack;
 	static std::stack<BooleanComplexExpression> m_boolStack;
-	static std::queue<VariableDescription*> m_varStack;
+	static std::stack<VariableDescription*> m_varStack;
 	static std::stack<VarType> m_types;
 	static std::vector<VarElement> m_curVarTable;
 	static std::vector<VarElement> m_varTable;
@@ -74,5 +74,10 @@ private:
 	static void LogExpression(const ComplexExpression &exp);
 	static void LogDescription(const VariableDescription &exp);
 	static void LogOpAction();
+	static void LogBooleanExpression(const BooleanComplexExpression &exp);
 	static std::string GetOPString(Operator op);
+
+	static bool IsCompatibleTypes(VarType needType, VarType gotType);
+
+	static bool functionHasReturn;
 };

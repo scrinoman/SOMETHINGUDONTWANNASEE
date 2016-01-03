@@ -484,12 +484,8 @@ bool StartParseCondExpr(const TokenTable &lexTable, size_t &lexPointer, size_t &
 	return false;
 }
 
-SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
+SyntaxError CreateSyntaxTable(const TokenTable &lexTable)
 {
-	CSyntaxTable *table = new CSyntaxTable("code", CSyntaxTable::NONTERMINAL);
-	CSyntaxTable *curNode = table;
-	SyntaxError error(false);
-
 	int pointer = 1;
 	int curScopeLevel = 0;
 	stack<int> stPointers;
@@ -509,7 +505,7 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 		int foundRule = grammarTable[pointer].FindNextRule(tokens[tokenPointer].type);
 		if (foundRule == -1)
 		{
-			return SyntaxResult(table, SyntaxError(true, tokens[tokenPointer].tokenString, row, SyntaxErrorType::UNEXPECTED_SYMBOL));
+			return SyntaxError(true, tokens[tokenPointer].tokenString, row, SyntaxErrorType::UNEXPECTED_SYMBOL);
 		}
 		else
 		{
@@ -552,14 +548,14 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 				{
 					if (!StartParseRightPart(lexTable, lexPointer, tokenPointer))
 					{
-						return SyntaxResult(table, SyntaxError(true, "Error while parsing arithmetic expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
+						return SyntaxError(true, "Error while parsing arithmetic expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL);
 					}
 				}
 				else
 				{
 					if (!StartParseCondExpr(lexTable, lexPointer, tokenPointer))
 					{
-						return SyntaxResult(table, SyntaxError(true, "Error while parsing condition expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
+						return SyntaxError(true, "Error while parsing condition expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL);
 					}
 				}
 
@@ -579,14 +575,14 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 					{
 						if (!StartParseRightPart(lexTable, lexPointer, tokenPointer))
 						{
-							return SyntaxResult(table, SyntaxError(true, "Error while parsing arithmetic expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
+							return SyntaxError(true, "Error while parsing arithmetic expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL);
 						}
 					}
 					else
 					{
 						if (!StartParseCondExpr(lexTable, lexPointer, tokenPointer))
 						{
-							return SyntaxResult(table, SyntaxError(true, "Error while parsing condition expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL));
+							return SyntaxError(true, "Error while parsing condition expression! ", row, SyntaxErrorType::UNEXPECTED_SYMBOL);
 						}
 					}
 				}
@@ -628,11 +624,11 @@ SyntaxResult CreateSyntaxTable(const TokenTable &lexTable)
 
 	if (!stPointers.empty() || pointer != 3)
 	{
-		return SyntaxResult(table, SyntaxError(true, "Expected more tokens", row, SyntaxErrorType::EXPECTED_MORE_SYMBOLS));
+		return SyntaxError(true, "Expected more tokens", row, SyntaxErrorType::EXPECTED_MORE_SYMBOLS);
 	}
 
 	CSemantics::Push(CSemantics::StackType(Labels::END_CODE));
 	CSemantics::LogToFile();
 
-	return SyntaxResult(table, SyntaxError(false));
+	return SyntaxError(false);
 }

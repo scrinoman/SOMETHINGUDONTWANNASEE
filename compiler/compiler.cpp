@@ -46,28 +46,27 @@ bool ProccessLexer(const string &fileName, TokenTable &table)
 	return !res.error;
 }
 
-bool ProccessSyntax(const TokenTable &lexTable, CSyntaxTable **syntaxTable)
+bool ProccessSyntax(const TokenTable &lexTable)
 {
 	cout << "Syntax works... ";
 
 	auto res = CreateSyntaxTable(lexTable);
 
-	if (res.error.isError)
+	if (res.isError)
 	{
-		cout << endl << "Error ! " << res.error.line << " line : " << res.error.lexem << endl;
+		cout << endl << "Error ! " << res.line << " line : " << res.lexem << endl;
 	}
 	else
 	{
-		*syntaxTable = res.table;
 		cout << "OK!" << endl;
 	}
 
-	return !res.error.isError;
+	return !res.isError;
 }
 
 void DebugLexer(const TokenTable &lexTable)
 {
-	ofstream fout("lex.txt");
+	ofstream fout("lexer_result.txt");
 	for (size_t i = 0; i < lexTable.size(); ++i)
 	{
 		for (size_t j = 0; j < lexTable[i].tokens.size(); ++j)
@@ -88,16 +87,13 @@ int main(int argc, char* argv[])
 	TokenTable lexTable;
 	if (ProccessLexer(sourceFile, lexTable))
 	{
-		DebugLexer(lexTable);
-		CSyntaxTable *syntaxTable = nullptr;
-		if (ProccessSyntax(lexTable, &syntaxTable))
+		#ifdef _DEBUG
+			DebugLexer(lexTable);
+		#endif
+
+		if (ProccessSyntax(lexTable))
 		{
 			//semantics&compile
-		}
-		
-		if (syntaxTable)
-		{
-			delete syntaxTable;
 		}
 	}
 

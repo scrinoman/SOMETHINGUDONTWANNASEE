@@ -44,4 +44,4 @@ struct SYNTAX_DLL_API SyntaxResult
 	}
 };
 
-SYNTAX_DLL_API SyntaxResult CreateSyntaxTable(const TokenTable &lexTable);
+SYNTAX_DLL_API SyntaxError CreateSyntaxTable(const TokenTable &lexTable);

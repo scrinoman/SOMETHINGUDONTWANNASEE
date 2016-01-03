@@ -1,0 +1,10 @@
+void main()
+{
+	int a = 4;
+	while (a > 0)
+	{
+		cout << a;
+		cout << '\n';
+		a = a - 1;
+	}
+}

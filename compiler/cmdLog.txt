@@ -1,13 +1,9 @@
 func main void 0 
 new_var int 0 
-assign variable 0 0 int  expression int 1 CONST_INTEGER 3
-new_var int 1 fd expression int 1 CONST_INTEGER 2
-new_var int 0 
-assign variable 0 2 int  expression int 7 CONST_INTEGER 2 CONST_INTEGER 3 variable 0 0 int  op * op + variable 1 1 int fd expression int 1 CONST_INTEGER 1 op -
-output expression int 5 CONST_INTEGER 2 CONST_INTEGER 3 op + CONST_INTEGER 5 op +
-output expression float 1 CONST_FLOAT 3.4
-output expression char 1 CONST_CHARACTER 'a'
-output expression string 1 CONST_STRING "HELLO WORLD !"
-output expression float 3 CONST_FLOAT 3.2 CONST_INTEGER 3 op *
-output expression float 3 CONST_FLOAT 2.5 CONST_FLOAT 2.5 op *
+assign 1 expression int 1 CONST_INTEGER 4 variable 0 0 int 
+while condition 3 expression int 1 variable 0 0 int  expression int 1 CONST_INTEGER 0 op >
+output expression int 1 variable 0 0 int 
+output expression char 1 CONST_CHARACTER '\n'
+assign 1 expression int 3 variable 0 0 int  CONST_INTEGER 1 op - variable 0 0 int 
+end_while
 func_end

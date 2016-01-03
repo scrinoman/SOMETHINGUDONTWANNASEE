@@ -82,6 +82,10 @@ enum Labels
 	END_VAR_DESCRIBE,
 	START_VAR_DECL_RIGHT,
 	END_VAR_DECL_RIGHT,
+	START_IF_DECL,
+	END_IF_DECL,
+	START_WHILE_COND,
+	END_WHILE_COND,
 	LABEL_NONE
 };
 
@@ -156,8 +160,6 @@ struct ComplexExpression
 		return elems[index];
 	}
 };
-
-//typedef std::vector<ComplexExpressionElement> ComplexExpression;
 
 struct BooleanExpressionElement
 {

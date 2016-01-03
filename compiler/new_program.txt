@@ -1,0 +1,9 @@
+void main()
+{
+	int a[333];
+	cin >> a[1];
+	cin >> a[2 * (6 + (4 - 8) * 0)];
+	cout << a[0];
+	cout << a[1];
+	cout << a[12];
+}
