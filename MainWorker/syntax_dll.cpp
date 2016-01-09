@@ -628,7 +628,10 @@ SyntaxError CreateSyntaxTable(const TokenTable &lexTable)
 	}
 
 	CSemantics::Push(CSemantics::StackType(Labels::END_CODE));
-	CSemantics::LogToFile();
+	if (!CSemantics::LastCheck())
+	{
+		return SyntaxError(true, "Function \"main\" not found", row, SyntaxErrorType::EXPECTED_EOF);
+	}
 
 	return SyntaxError(false);
 }

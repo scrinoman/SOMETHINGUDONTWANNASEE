@@ -9,8 +9,9 @@
 #include <iostream>
 #include <fstream>
 #include <queue>
+#include "symbol_export.h"
 
-class CSemantics
+class SYNTAX_DLL_API CSemantics
 {
 public:
 	struct StackType
@@ -32,9 +33,9 @@ public:
 	};
 	
 	static void Push(StackType &&element);
-	static StackType Pop();
 	static bool FoundError();
-	static void LogToFile();
+	static void CloseLogger();
+	static bool LastCheck();
 
 private:
 	static bool m_error;
@@ -80,4 +81,5 @@ private:
 	static bool IsCompatibleTypes(VarType needType, VarType gotType);
 
 	static bool functionHasReturn;
+	static bool hasEntryPoint;
 };

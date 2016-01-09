@@ -1,14 +1,15 @@
 void main()
 {
-	int a[20];
-	for (int i = 0; i < 20; i = i + 1)
+	int size = 5;
+	int a[size];
+	for (int i = 0; i < size; i = i + 1)
 	{
 		cin >> a[i];
 	}
 
-	for (int i = 0; i < 20; i = i + 1)
+	for (int i = 0; i < size; i = i + 1)
 	{
-		for (int j = i + 1; j < 20; j = j + 1)
+		for (int j = i + 1; j < size; j = j + 1)
 		{
 			if (a[i] > a[j])
 			{
@@ -19,7 +20,7 @@ void main()
 		}
 	}
 	
-	for (int i = 0; i < 20; i = i + 1)
+	for (int i = 0; i < size; i = i + 1)
 	{
 		cout << a[i];
 		cout << " ";

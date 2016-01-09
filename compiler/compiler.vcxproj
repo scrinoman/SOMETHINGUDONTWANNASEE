@@ -93,6 +93,9 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CodeGenerator\CodeGenerator.csproj">
+      <Project>{b10e1690-90e4-4753-99c4-23f7d72dfaed}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Lexer\Lexer.vcxproj">
       <Project>{3bae2577-52d6-48d8-9323-cddce452c819}</Project>
     </ProjectReference>

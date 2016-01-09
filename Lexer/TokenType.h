@@ -1,7 +1,7 @@
 #pragma once
 #include "Lexer_dll.h"
 
-enum LEX_DLL_API TokenType
+enum class LEX_DLL_API TokenType
 {
 	ERROR,
 	IDENTIFIER,

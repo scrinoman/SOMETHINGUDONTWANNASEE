@@ -20,9 +20,10 @@ std::vector<VarElement> CSemantics::m_curVarTable;
 std::vector<VarElement> CSemantics::m_varTable;
 std::stack<VarType> CSemantics::m_types;
 std::vector<FunctionTable*> CSemantics::m_funcTables;
-std::ofstream CSemantics::cmdWriter("cmdLog.txt");
+std::ofstream CSemantics::cmdWriter("D:\\Code\\3_1\\git\\SOMETHINGUDONTWANNASEE\\Debug\\cmdLog.txt");
 int CSemantics::curScope = 0;
 bool CSemantics::functionHasReturn = false;
+bool CSemantics::hasEntryPoint = false;
 
 const std::set<TokenType> CSemantics::m_forbiddenSymbols = {
 	reservedTokens["["],
@@ -365,23 +366,14 @@ bool CSemantics::IsCompatibleTypes(VarType needType, VarType gotType)
 	return (needType == gotType || (needType == VarType::TYPE_FLOAT && gotType == VarType::TYPE_INT));
 }
 
-CSemantics::StackType CSemantics::Pop()
+void CSemantics::CloseLogger()
 {
-	if (m_stack.empty())
-	{
-		throw std::runtime_error("stack pop from empty stack");
-	}
-
-	StackType elem = m_stack.top();
-	m_stack.pop();
-
-	return elem;
+	cmdWriter.close();
 }
 
-void CSemantics::LogToFile()
+bool CSemantics::LastCheck()
 {
-	auto stackCopy = m_stack;
-	std::stack<StackType> okStack;
+	return hasEntryPoint;
 }
 
 void CSemantics::LogVarType(VarType type)
@@ -480,7 +472,14 @@ void CSemantics::LogOpAction()
 	m_varStack.pop();
 	if (desc->hasFirstDim)
 	{
-		cmdWriter << "0 ";
+		if (desc->hasSecondDim)
+		{
+			cmdWriter << "2 ";
+		}
+		else
+		{
+			cmdWriter << "1 ";
+		}
 		LogDescription(*desc);
 		cmdWriter << " ";
 		LogExpression(m_evalStack.top());
@@ -488,7 +487,7 @@ void CSemantics::LogOpAction()
 	}
 	else
 	{
-		cmdWriter << "1 ";
+		cmdWriter << "0 ";
 		LogExpression(m_evalStack.top());
 		m_evalStack.pop();
 		cmdWriter << " ";
@@ -532,7 +531,7 @@ void CSemantics::LogDescription(const VariableDescription &desc)
 	if (desc.isFunctionCall) //func name args_count <args>
 	{
 		cmdWriter << "funcCall ";
-		cmdWriter << m_funcTables[desc.func->funcPointer]->GetElement(0)->GetName() << " ";
+		cmdWriter << desc.func->funcPointer << " ";//m_funcTables[desc.func->funcPointer]->GetElement(0)->GetName() << " ";
 		size_t count = (*(desc.func->args)).size();
 		cmdWriter << count << " ";
 		for (size_t i = 0; i < count; ++i)
@@ -616,23 +615,37 @@ void CSemantics::CreateFunction()
 	std::string funcName = m_stack.top().token.tokenString;
 	m_stack.pop();
 
+	if (funcName == "main")
+	{
+		if (paramTable->GetCount() > 0)
+		{
+			m_error = true;
+			std::cout << "Function \"main\" has parameters (expected 0)" << std::endl;
+			return;
+		}
+		else
+		{
+			hasEntryPoint = true;
+		}
+	}
+
 	auto funcType = m_stack.top().token.type;
 	VarType varType;
 	switch (funcType)
 	{
-	case CHAR:
+	case TokenType::CHAR:
 		varType = VarType::TYPE_CHAR;
 		break;
-	case STR:
+	case TokenType::STR:
 		varType = VarType::TYPE_STRING;
 		break;
-	case FLOAT:
+	case TokenType::FLOAT:
 		varType = VarType::TYPE_FLOAT;
 		break;
-	case INT:
+	case TokenType::INT:
 		varType = VarType::TYPE_INT;
 		break;
-	case VOID:
+	case TokenType::VOID:
 		varType = VarType::TYPE_VOID;
 		break;
 	default:
@@ -689,16 +702,16 @@ void CSemantics::CreateParam()
 	VarType varType;
 	switch (type)
 	{
-	case CHAR:
+	case TokenType::CHAR:
 		varType = VarType::TYPE_CHAR;
 		break;
-	case STR:
+	case TokenType::STR:
 		varType = VarType::TYPE_STRING;
 		break;
-	case FLOAT:
+	case TokenType::FLOAT:
 		varType = VarType::TYPE_FLOAT;
 		break;
-	case INT:
+	case TokenType::INT:
 		varType = VarType::TYPE_INT;
 		break;
 	default:
@@ -955,16 +968,16 @@ void CSemantics::AddVarToTable()
 	VarType varType;
 	switch (type)
 	{
-	case CHAR:
+	case TokenType::CHAR:
 		varType = VarType::TYPE_CHAR;
 		break;
-	case STR:
+	case TokenType::STR:
 		varType = VarType::TYPE_STRING;
 		break;
-	case FLOAT:
+	case TokenType::FLOAT:
 		varType = VarType::TYPE_FLOAT;
 		break;
-	case INT:
+	case TokenType::INT:
 		varType = VarType::TYPE_INT;
 		break;
 	default:
@@ -1021,16 +1034,16 @@ VarType CSemantics::GetType(TokenType type)
 {
 	switch (type)
 	{
-	case CHARACTER:
+	case TokenType::CHARACTER:
 		return VarType::TYPE_CHAR;
 		break;
-	case STRING:
+	case TokenType::STRING:
 		return VarType::TYPE_STRING;
 		break;
-	case FLOAT_NUMBER:
+	case TokenType::FLOAT_NUMBER:
 		return VarType::TYPE_FLOAT;
 		break;
-	case INTEGER_DEC_NUMBER:
+	case TokenType::INTEGER_DEC_NUMBER:
 		return VarType::TYPE_INT;
 		break;
 	default:
@@ -1342,7 +1355,7 @@ void CSemantics::CreateConditionExpression()
 										auto firstArg = curTypes.top();
 										curTypes.pop();
 
-										if (newElem.op == Operator::LOG_AND || newElem.op == Operator::LOG_AND)
+										if (newElem.op == Operator::LOG_AND || newElem.op == Operator::LOG_OR)
 										{
 											if (!(firstArg == VarType::TYPE_BOOL && secArg == VarType::TYPE_BOOL))
 											{
@@ -1404,7 +1417,7 @@ void CSemantics::CreateConditionExpression()
 									auto firstArg = curTypes.top();
 									curTypes.pop();
 
-									if (lastOP.op == Operator::LOG_AND || lastOP.op == Operator::LOG_AND)
+									if (lastOP.op == Operator::LOG_AND || lastOP.op == Operator::LOG_OR)
 									{
 										if (!(firstArg == VarType::TYPE_BOOL && secArg == VarType::TYPE_BOOL))
 										{
@@ -1491,7 +1504,7 @@ void CSemantics::CreateConditionExpression()
 			auto firstArg = curTypes.top();
 			curTypes.pop();
 
-			if (newElem.op == Operator::LOG_AND || newElem.op == Operator::LOG_AND)
+			if (newElem.op == Operator::LOG_AND || newElem.op == Operator::LOG_OR)
 			{
 				if (!(firstArg == VarType::TYPE_BOOL && secArg == VarType::TYPE_BOOL))
 				{

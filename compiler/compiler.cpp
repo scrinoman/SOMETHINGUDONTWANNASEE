@@ -3,23 +3,22 @@
 #include "syntax_dll.h"
 #include "SyntaxTable.h"
 #include "Semantics.h"
+#include <Windows.h>
 
-using namespace std;
-
-const string COMPILER_ARGUMENTS_LINE = "compiler.exe - [sourceCode] - {exeFileName}";
+const std::string COMPILER_ARGUMENTS_LINE = "compiler.exe - [sourceCode] - {exeFileName}";
 
 bool CheckArgsCount(int argc)
 {
 	if (argc < 2)
 	{
-		cout << "Not enough arguments: " << COMPILER_ARGUMENTS_LINE << endl;
+		std::cout << "Not enough arguments: " << COMPILER_ARGUMENTS_LINE << std::endl;
 		return false;
 	}
 	else
 	{
 		if (argc > 3)
 		{
-			cout << "Too many arguments: " << COMPILER_ARGUMENTS_LINE << endl;
+			std::cout << "Too many arguments: " << COMPILER_ARGUMENTS_LINE << std::endl;
 			return false;
 		}
 	}
@@ -27,20 +26,20 @@ bool CheckArgsCount(int argc)
 	return true;
 }
 
-bool ProccessLexer(const string &fileName, TokenTable &table)
+bool ProccessLexer(const std::string &fileName, TokenTable &table)
 {
-	cout << "Lexer works... ";
+	std::cout << "Lexer works... ";
 
 	auto res = ParseFile(fileName);
 
 	if (res.error)
 	{
-		cout << endl << "Error ! " << res.errorMessage << endl;
+		std::cout << std::endl << "Error ! " << res.errorMessage << std::endl;
 	}
 	else
 	{
 		table = std::move(res.table);
-		cout << "OK!" << endl;
+		std::cout << "OK!" << std::endl;
 	}
 
 	return !res.error;
@@ -48,17 +47,17 @@ bool ProccessLexer(const string &fileName, TokenTable &table)
 
 bool ProccessSyntax(const TokenTable &lexTable)
 {
-	cout << "Syntax works... ";
+	std::cout << "Syntax works... ";
 
 	auto res = CreateSyntaxTable(lexTable);
 
 	if (res.isError)
 	{
-		cout << endl << "Error ! " << res.line << " line : " << res.lexem << endl;
+		std::cout << std::endl << "Error ! " << res.line << " line : " << res.lexem << std::endl;
 	}
 	else
 	{
-		cout << "OK!" << endl;
+		std::cout << "OK!" << std::endl;
 	}
 
 	return !res.isError;
@@ -66,13 +65,38 @@ bool ProccessSyntax(const TokenTable &lexTable)
 
 void DebugLexer(const TokenTable &lexTable)
 {
-	ofstream fout("lexer_result.txt");
+	std::ofstream fout("lexer_result.txt");
 	for (size_t i = 0; i < lexTable.size(); ++i)
 	{
 		for (size_t j = 0; j < lexTable[i].tokens.size(); ++j)
 		{
-			fout << lexTable[i].row << " " << lexTable[i].tokens[j].tokenString << " " << lexTable[i].tokens[j].strType << endl;
+			fout << lexTable[i].row << " " << lexTable[i].tokens[j].tokenString << " " << lexTable[i].tokens[j].strType << std::endl;
 		}
+	}
+}
+
+bool RunCodeGenerator(const std::string &exeName)
+{
+	STARTUPINFO stInfo;
+	PROCESS_INFORMATION procInfo;
+
+	ZeroMemory(&stInfo, sizeof(stInfo));
+	ZeroMemory(&procInfo, sizeof(procInfo));
+
+	stInfo.cb = sizeof(stInfo);
+	std::wstring ws(exeName.begin(), exeName.end());
+
+	if (CreateProcess(L"D:\\Code\\3_1\\git\\SOMETHINGUDONTWANNASEE\\Debug\\CodeGenerator.exe", 
+		L"D:\\Code\\3_1\\git\\SOMETHINGUDONTWANNASEE\\Debug\\CodeGenerator.exe wtf",//&ws[0],
+		NULL, NULL, FALSE, 0, NULL, NULL,
+		&stInfo, &procInfo))
+	{
+		WaitForSingleObject(procInfo.hProcess, INFINITE);
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
 
@@ -83,7 +107,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	string sourceFile = argv[1];
+	std::string sourceFile = argv[1];
 	TokenTable lexTable;
 	if (ProccessLexer(sourceFile, lexTable))
 	{
@@ -93,7 +117,16 @@ int main(int argc, char* argv[])
 
 		if (ProccessSyntax(lexTable))
 		{
-			//semantics&compile
+			CSemantics::CloseLogger();
+			if (RunCodeGenerator(sourceFile))
+			{
+				std::cout << "Created !" << std::endl;
+			}
+			else
+			{
+				std::cout << "Error while launching code generator !" << std::endl;
+			}
+			
 		}
 	}
 

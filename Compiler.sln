@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "compiler", "compiler\Compiler.vcxproj", "{9D79B5FE-AF3D-4B0D-868B-A915F985E1DE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B10E1690-90E4-4753-99C4-23F7D72DFAED} = {B10E1690-90E4-4753-99C4-23F7D72DFAED}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lexer", "Lexer\Lexer.vcxproj", "{3BAE2577-52D6-48D8-9323-CDDCE452C819}"
 EndProject

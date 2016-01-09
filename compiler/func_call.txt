@@ -1,0 +1,13 @@
+int calc(int a, string b)
+{
+	int u = 36 + a * 2;
+	cout << b;
+	return a + u;
+}
+
+int main()
+{
+	float u = calc(2, "170 + fjdnfkjdn GHELOLO ") * 5;
+	cout << u;
+	return 0;
+}

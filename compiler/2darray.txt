@@ -1,0 +1,10 @@
+void main()
+{
+	int p = 3;
+	int q = 2 * p;
+	float c[q][2];
+	c[0][1] = -6.5;
+	c[1][1] = 2.3;
+	cout << c[0][1];
+	cout << c[1][1];
+}

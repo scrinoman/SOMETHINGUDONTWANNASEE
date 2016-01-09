@@ -32,12 +32,16 @@ void main()
 {
 	int firstNum;
 	int notation;
+	int notationTo = -1;
 
 	cout << "Number: ";
 	cin >> firstNum;
 
-	cout << "Notation: ";
+	cout << "Current notation: ";
 	cin >> notation;
+	
+	cout << "Destination notation: ";
+	cin >> notationTo;
 
-	cout << ToNotation(ToDec(num, notation), notation);
+	cout << ToNotation(ToDec(firstNum, notation), notationTo);
 }
