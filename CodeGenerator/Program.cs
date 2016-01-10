@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Globalization;
+using System.IO;
 
 namespace CodeGenerator
 {
@@ -338,28 +339,28 @@ namespace CodeGenerator
             startPointer = pointer;
         }
 
-        static void DeclareVar(ILGenerator gen, string[] args)
+        static void DeclareVar(ILGenerator gen, string[] args, int startPointer)
         {
-            if (args[2] == "0")
+            if (args[startPointer + 2] == "0")
             {
-                curLocals.Add(gen.DeclareLocal(GetTypeByString(args[1])));
+                curLocals.Add(gen.DeclareLocal(GetTypeByString(args[startPointer + 1])));
                 curScopes.Add(curScope);
             }
             else
             {
-                if (args[2] == "1")
+                if (args[startPointer + 2] == "1")
                 {
-                    var arr = gen.DeclareLocal(GetTypeByString(args[1], true));
+                    var arr = gen.DeclareLocal(GetTypeByString(args[startPointer + 1], true));
                     int pointer = 4;
                     CreateExpression(gen, args, ref pointer);
-                    gen.Emit(OpCodes.Newarr, GetTypeByString(args[1]));
+                    gen.Emit(OpCodes.Newarr, GetTypeByString(args[startPointer + 1]));
                     gen.Emit(OpCodes.Stloc, arr);
                     curLocals.Add(arr);
                     curScopes.Add(curScope);
                 }
                 else
                 {
-                    var arrType = GetTypeByString(args[1], true, true);
+                    var arrType = GetTypeByString(args[startPointer + 1], true, true);
                     var arr = gen.DeclareLocal(arrType);
                     int pointer = 4;
                     CreateExpression(gen, args, ref pointer);
@@ -391,20 +392,22 @@ namespace CodeGenerator
 
         static void Main(string[] args)
         {
-            string[] lines = System.IO.File.ReadAllLines("D:\\Code\\3_1\\git\\SOMETHINGUDONTWANNASEE\\Debug\\cmdLog.txt");
+            string[] lines = File.ReadAllLines("D:\\Code\\3_1\\git\\SOMETHINGUDONTWANNASEE\\Debug\\cmdLog.txt");
 
             AssemblyBuilder build = AppDomain.CurrentDomain.DefineDynamicAssembly(
-                new System.Reflection.AssemblyName("CustomCompiler program"), 
+                new System.Reflection.AssemblyName("CustomCompiler program"),
                 AssemblyBuilderAccess.RunAndSave);
             ModuleBuilder module = build.DefineDynamicModule(args[0], args[0] + ".exe");
             TypeBuilder prog = module.DefineType("Program", TypeAttributes.Class | TypeAttributes.Public);
             builder = null;
-            
+
             curLocals.Clear();
             Stack<Label> ifLabels = new Stack<Label>();
             Stack<Label> ifElseLabels = new Stack<Label>();
             Stack<Label> whileLabels = new Stack<Label>();
             Stack<Label> whileLabelsExit = new Stack<Label>();
+            Stack<Label> forExitLabels = new Stack<Label>();
+            Stack<Label> forLabels = new Stack<Label>();
 
             foreach (string line in lines)
             {
@@ -429,184 +432,232 @@ namespace CodeGenerator
                         build.SetEntryPoint(builder, PEFileKinds.ConsoleApplication);
                     }
                 }
-                else
+
+                if (tokens[0] == "func_end")
                 {
-                    if (tokens[0] == "func_end")
-                    {
-                        builder.GetILGenerator().Emit(OpCodes.Ret);
-                        curLocals.Clear();
-                        curScope = 0;
-                        curScopes.Clear();
-                    }
+                    builder.GetILGenerator().Emit(OpCodes.Ret);
+                    curLocals.Clear();
+                    curScope = 0;
+                    curScopes.Clear();
+                }
 
-                    if (tokens[0] == "new_var")
-                    {
-                        DeclareVar(builder.GetILGenerator(), tokens);
-                    }
+                if (tokens[0] == "new_var")
+                {
+                    DeclareVar(builder.GetILGenerator(), tokens, 0);
+                }
 
-                    if (tokens[0] == "assign")
+                if (tokens[0] == "assign")
+                {
+                    int pointer = 2;
+                    if (tokens[1] == "0")
                     {
-                        int pointer = 2;
-                        if (tokens[1] == "0")
-                        {
-                            CreateExpression(builder.GetILGenerator(), tokens, ref pointer);
-                            LoadVariable(builder.GetILGenerator(), tokens, ref pointer);
-                        }
-                        else
-                        {
-                            var type = LoadVariable(builder.GetILGenerator(), tokens, ref pointer);
-                            CreateExpression(builder.GetILGenerator(), tokens, ref pointer);
-                            if (tokens[1] == "1")
-                            {
-                                builder.GetILGenerator().Emit(OpCodes.Stelem, type);
-                            }
-                            else
-                            {
-                                string arrType = tokens[5];
-                                builder.GetILGenerator().Emit(OpCodes.Call, GetTypeByString(arrType, true, true).GetMethod("Set", 
-                                                            new Type[] {typeof(int), typeof(int), GetTypeByString(arrType) }));
-                            }
-                        }
-                    }
-
-                    if (tokens[0] == "output")
-                    {
-                        int pointer = 1;
                         CreateExpression(builder.GetILGenerator(), tokens, ref pointer);
-                        string type = tokens[2];
-                        Type curType = GetTypeByString(type);
-                        builder.GetILGenerator().Emit(OpCodes.Call,
-                                     typeof(Console).GetMethod("Write",
-                                     new Type[] { curType }));
+                        LoadVariable(builder.GetILGenerator(), tokens, ref pointer);
                     }
-
-                    if (tokens[0] == "input")
+                    else
                     {
-                        int pointer = 2;
-                        if (tokens[1] == "0")
+                        var type = LoadVariable(builder.GetILGenerator(), tokens, ref pointer);
+                        CreateExpression(builder.GetILGenerator(), tokens, ref pointer);
+                        if (tokens[1] == "1")
                         {
-                            var type = LoadVariable(builder.GetILGenerator(), tokens, ref pointer);
-                            builder.GetILGenerator().EmitCall(OpCodes.Call, 
-                                    typeof(Console).GetMethod("ReadLine"), new[] { typeof(string) });
-                            if (type == typeof(float))
-                            {
-                                builder.GetILGenerator().Emit(OpCodes.Call,
-                                    typeof(CultureInfo).GetMethod("get_InvariantCulture"));
-                                builder.GetILGenerator().Emit(OpCodes.Call,
-                                    typeof(Convert).GetMethod("ToSingle", new[] { typeof(string), typeof(IFormatProvider) }));
-                            }
-                            else
-                            {
-                                builder.GetILGenerator().Emit(OpCodes.Call,
-                                        typeof(Convert).GetMethod(GetConvertMethodName(type), new[] { typeof(string) }));
-                            }
                             builder.GetILGenerator().Emit(OpCodes.Stelem, type);
                         }
                         else
                         {
-                            builder.GetILGenerator().EmitCall(OpCodes.Call,
-                                   typeof(Console).GetMethod("ReadLine"), new[] { typeof(string) });
-                            if (tokens[5] == "float")
-                            {
-                                builder.GetILGenerator().Emit(OpCodes.Call,
-                                    typeof(CultureInfo).GetMethod("get_InvariantCulture"));
-                                builder.GetILGenerator().Emit(OpCodes.Call,
-                                    typeof(Convert).GetMethod("ToSingle", new[] { typeof(string), typeof(IFormatProvider) }));
-                            }
-                            else
-                            {
-                                builder.GetILGenerator().Emit(OpCodes.Call,
-                                    typeof(Convert).GetMethod(GetConvertMethodName(GetTypeByString(tokens[5])), new[] { typeof(string) }));
-                            }
-                            
-                            LoadVariable(builder.GetILGenerator(), tokens, ref pointer);
+                            string arrType = tokens[5];
+                            builder.GetILGenerator().Emit(OpCodes.Call, GetTypeByString(arrType, true, true).GetMethod("Set",
+                                                        new Type[] { typeof(int), typeof(int), GetTypeByString(arrType) }));
                         }
                     }
+                }
 
-                    if (tokens[0] == "return")
+                if (tokens[0] == "output")
+                {
+                    int pointer = 1;
+                    CreateExpression(builder.GetILGenerator(), tokens, ref pointer);
+                    string type = tokens[2];
+                    Type curType = GetTypeByString(type);
+                    builder.GetILGenerator().Emit(OpCodes.Call,
+                                 typeof(Console).GetMethod("Write",
+                                 new Type[] { curType }));
+                }
+
+                if (tokens[0] == "input")
+                {
+                    int pointer = 2;
+                    if (tokens[1] == "0")
                     {
-                        if (tokens[1] == "empty")
+                        builder.GetILGenerator().EmitCall(OpCodes.Call,
+                               typeof(Console).GetMethod("ReadLine"), new[] { typeof(string) });
+                        if (tokens[5] == "float")
                         {
-                            builder.GetILGenerator().Emit(OpCodes.Ret);
+                            builder.GetILGenerator().Emit(OpCodes.Call,
+                                typeof(CultureInfo).GetMethod("get_InvariantCulture"));
+                            builder.GetILGenerator().Emit(OpCodes.Call,
+                                typeof(Convert).GetMethod("ToSingle", new[] { typeof(string), typeof(IFormatProvider) }));
                         }
-                        else 
+                        else
                         {
-                            var needType = GetTypeByString(tokens[1]);
-                            var gotType = GetTypeByString(tokens[2]);
-                            int pointer = 3;
-                            CreateExpression(builder.GetILGenerator(), tokens, ref pointer);
-                            if (needType != gotType && needType == typeof(float))
-                            {
-                                builder.GetILGenerator().Emit(OpCodes.Conv_R4);
-                            }
-                            builder.GetILGenerator().Emit(OpCodes.Ret);
+                            builder.GetILGenerator().Emit(OpCodes.Call,
+                                typeof(Convert).GetMethod(GetConvertMethodName(GetTypeByString(tokens[5])), new[] { typeof(string) }));
                         }
-                    }
 
-                    if (tokens[0] == "if")
-                    {
-                        int pointer = 1;
-                        CreateCondition(builder.GetILGenerator(), tokens, ref pointer);
-                        Label label = builder.GetILGenerator().DefineLabel();
-                        ifLabels.Push(label);
-                        builder.GetILGenerator().Emit(OpCodes.Brfalse, label);
-                        curScope++;
+                        LoadVariable(builder.GetILGenerator(), tokens, ref pointer);
                     }
-
-                    if (tokens[0] == "end_if")
+                    else
                     {
-                        if (tokens[1] == "else")
+                        var type = LoadVariable(builder.GetILGenerator(), tokens, ref pointer);
+                        builder.GetILGenerator().EmitCall(OpCodes.Call,
+                                typeof(Console).GetMethod("ReadLine"), new[] { typeof(string) });
+                        if (type == typeof(float))
                         {
-                            Label elseLabel = builder.GetILGenerator().DefineLabel();
-                            ifElseLabels.Push(elseLabel);
-                            builder.GetILGenerator().Emit(OpCodes.Br, elseLabel);                            
+                            builder.GetILGenerator().Emit(OpCodes.Call,
+                                typeof(CultureInfo).GetMethod("get_InvariantCulture"));
+                            builder.GetILGenerator().Emit(OpCodes.Call,
+                                typeof(Convert).GetMethod("ToSingle", new[] { typeof(string), typeof(IFormatProvider) }));
                         }
-                        Label label = ifLabels.Pop();
-                        builder.GetILGenerator().MarkLabel(label);
-                        RemoveCurScopes();
-                        curScope--;
-                    }
+                        else
+                        {
+                            builder.GetILGenerator().Emit(OpCodes.Call,
+                                    typeof(Convert).GetMethod(GetConvertMethodName(type), new[] { typeof(string) }));
+                        }
 
-                    if (tokens[0] == "else")
+                        if (tokens[1] == "1")
+                        {
+                            builder.GetILGenerator().Emit(OpCodes.Stelem, type);
+                        }
+                        else
+                        {
+                            string arrType = tokens[5];
+                            builder.GetILGenerator().Emit(OpCodes.Call, GetTypeByString(arrType, true, true).GetMethod("Set",
+                                                        new Type[] { typeof(int), typeof(int), GetTypeByString(arrType) }));
+                        }
+                    }
+                }
+
+                if (tokens[0] == "return")
+                {
+                    if (tokens[1] == "empty")
                     {
-                        curScope++;
+                        builder.GetILGenerator().Emit(OpCodes.Ret);
                     }
-
-                    if (tokens[0] == "end_else")
+                    else
                     {
-                        Label label = ifElseLabels.Pop();
-                        builder.GetILGenerator().MarkLabel(label);
-                        RemoveCurScopes();
-                        curScope--;
+                        var needType = GetTypeByString(tokens[1]);
+                        var gotType = GetTypeByString(tokens[2]);
+                        int pointer = 3;
+                        CreateExpression(builder.GetILGenerator(), tokens, ref pointer);
+                        if (needType != gotType && needType == typeof(float))
+                        {
+                            builder.GetILGenerator().Emit(OpCodes.Conv_R4);
+                        }
+                        builder.GetILGenerator().Emit(OpCodes.Ret);
                     }
+                }
 
-                    if (tokens[0] == "while")
+                if (tokens[0] == "if")
+                {
+                    int pointer = 1;
+                    CreateCondition(builder.GetILGenerator(), tokens, ref pointer);
+                    Label label = builder.GetILGenerator().DefineLabel();
+                    ifLabels.Push(label);
+                    builder.GetILGenerator().Emit(OpCodes.Brfalse, label);
+                    curScope++;
+                }
+
+                if (tokens[0] == "end_if")
+                {
+                    if (tokens[1] == "else")
                     {
-                        int pointer = 1;
-                        
-                        Label label = builder.GetILGenerator().DefineLabel();
-                        builder.GetILGenerator().MarkLabel(label);
-                        whileLabels.Push(label);
-                        Label exit = builder.GetILGenerator().DefineLabel();
-                        whileLabelsExit.Push(exit);
-
-                        CreateCondition(builder.GetILGenerator(), tokens, ref pointer);
-                        builder.GetILGenerator().Emit(OpCodes.Brfalse, exit);
-                        curScope++;
+                        Label elseLabel = builder.GetILGenerator().DefineLabel();
+                        ifElseLabels.Push(elseLabel);
+                        builder.GetILGenerator().Emit(OpCodes.Br, elseLabel);
                     }
+                    Label label = ifLabels.Pop();
+                    builder.GetILGenerator().MarkLabel(label);
+                    RemoveCurScopes();
+                    curScope--;
+                }
 
-                    if (tokens[0] == "end_while")
-                    {
-                        builder.GetILGenerator().Emit(OpCodes.Br, whileLabels.Peek());
-                        Label label = whileLabelsExit.Pop();
-                        builder.GetILGenerator().MarkLabel(label);
-                        RemoveCurScopes();
-                        curScope--;
-                    }
+                if (tokens[0] == "else")
+                {
+                    curScope++;
+                }
+
+                if (tokens[0] == "end_else")
+                {
+                    Label label = ifElseLabels.Pop();
+                    builder.GetILGenerator().MarkLabel(label);
+                    RemoveCurScopes();
+                    curScope--;
+                }
+
+                if (tokens[0] == "for")
+                {
+                    curScope++;
+                    int pointer = 1;
+                    DeclareVar(builder.GetILGenerator(), tokens, pointer);
+
+                    pointer = 6;
+                    CreateExpression(builder.GetILGenerator(), tokens, ref pointer);
+                    LoadVariable(builder.GetILGenerator(), tokens, ref pointer);
+
+                    Label label = builder.GetILGenerator().DefineLabel();
+                    builder.GetILGenerator().MarkLabel(label);
+                    forLabels.Push(label);
+                    
+                    Label exit = builder.GetILGenerator().DefineLabel();
+                    forExitLabels.Push(exit);
+
+                    CreateCondition(builder.GetILGenerator(), tokens, ref pointer);
+                    builder.GetILGenerator().Emit(OpCodes.Brfalse, exit);
+
+                    curScope++;
+                }
+
+                if (tokens[0] == "end_for")
+                {
+                    int pointer = 3;
+                    CreateExpression(builder.GetILGenerator(), tokens, ref pointer);
+                    LoadVariable(builder.GetILGenerator(), tokens, ref pointer);
+
+                    builder.GetILGenerator().Emit(OpCodes.Br, forLabels.Pop());
+                    Label label = forExitLabels.Pop();
+                    builder.GetILGenerator().MarkLabel(label);
+
+                    RemoveCurScopes();
+                    curScope--;
+
+                    RemoveCurScopes();
+                    curScope--;
+                }
+
+                if (tokens[0] == "while")
+                {
+                    int pointer = 1;
+
+                    Label label = builder.GetILGenerator().DefineLabel();
+                    builder.GetILGenerator().MarkLabel(label);
+                    whileLabels.Push(label);
+                    Label exit = builder.GetILGenerator().DefineLabel();
+                    whileLabelsExit.Push(exit);
+
+                    CreateCondition(builder.GetILGenerator(), tokens, ref pointer);
+                    builder.GetILGenerator().Emit(OpCodes.Brfalse, exit);
+                    curScope++;
+                }
+
+                if (tokens[0] == "end_while")
+                {
+                    builder.GetILGenerator().Emit(OpCodes.Br, whileLabels.Pop());
+                    Label label = whileLabelsExit.Pop();
+                    builder.GetILGenerator().MarkLabel(label);
+                    RemoveCurScopes();
+                    curScope--;
                 }
             }
             prog.CreateType();
-            
+
             build.Save(args[0] + ".exe");
         }
     }

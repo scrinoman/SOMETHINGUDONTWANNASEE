@@ -114,8 +114,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				break;
 			case END_EXPLIST:
 				break;
-			case START_DECL:
-				break;
 			case END_DECL:
 			{
 				if (m_stack.top().label != Labels::START_VAR_DECL && m_stack.top().label != Labels::START_MAP_DECL)
@@ -131,17 +129,17 @@ void CSemantics::Push(CSemantics::StackType &&element)
 					{
 						m_varStack.push(new VariableDescription(m_curVarTable.size() - 1)); //opasno !
 						LogOpAction();
+						cmdWriter << std::endl;
 					}
 				}
 				break;
 			}
-			case START_ASSIGN:
-				break;
 			case END_ASSIGN:
+			{
 				LogOpAction();
+				cmdWriter << std::endl;
 				break;
-			case START_INPUT:
-				break;
+			}
 			case END_INPUT:
 			{
 				cmdWriter << "input ";
@@ -149,18 +147,23 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				m_varStack.pop();
 				if (desc->hasFirstDim)
 				{
-					cmdWriter << "0 ";
+					if (desc->hasSecondDim)
+					{
+						cmdWriter << "2 ";
+					}
+					else
+					{
+						cmdWriter << "1 ";
+					}
 				}
 				else
 				{
-					cmdWriter << "1 ";
+					cmdWriter << "0 ";
 				}
 				LogDescription(*desc);
 				cmdWriter << std::endl;
 				break;
 			}
-			case START_OUTPUT:
-				break;
 			case END_OUTPUT:
 			{
 				cmdWriter << "output ";
@@ -170,8 +173,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				cmdWriter << std::endl;
 				break;
 			}
-			case START_WHILE:
-				break;
 			case END_WHILE:
 				cmdWriter << "end_while" << std::endl;
 				break;
@@ -186,9 +187,33 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case START_FOR:
 				break;
 			case END_FOR:
+			{
+				cmdWriter << "end_for ";
+				while (m_stack.top().label != Labels::START_FOR_CHANGE)
+				{
+					m_stack.pop();
+				}
+				m_stack.pop();
+				
+				auto varName = m_stack.top().token.tokenString;
+				m_stack.pop();
+				int var = GetVarInTable(varName);
+				if (var != -1)
+				{
+					m_varStack.push(new VariableDescription(var));
+					LogOpAction();
+					cmdWriter << std::endl;
+				}
+
+				while (!m_curVarTable.empty() && m_curVarTable.back().scope == curScope)
+				{
+					m_curVarTable.pop_back();
+				}
+
+				curScope--;
+
 				break;
-			case START_CONDITION:
-				break;
+			}
 			case END_CONDITION:
 			{
 				if (m_stack.top().label == Labels::START_ELSE)
@@ -201,11 +226,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				}
 				break;
 			}
-			case START_IF:
-				break;
-			case END_IF:
-				//cmdWriter << "end_if" << std::endl;
-				break;
 			case END_IF_DECL:
 			{
 				cmdWriter << "if ";
@@ -214,8 +234,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				cmdWriter << std::endl;
 				break;
 			}
-			case START_ELSE:
-				break;
 			case END_ELSE:
 			{
 				while (m_stack.top().label != Labels::START_ELSE)
@@ -224,8 +242,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				}
 				break;
 			}
-			case START_RETURN:
-				break;
 			case END_RETURN:
 			{
 				if (m_stack.top().label == Labels::START_RETURN)
@@ -273,17 +289,14 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				}
 				break;
 			}
-			case START_VAR_DECL:
-				break;
 			case END_VAR_DECL:
+			{
 				AddVarToTable();
+				cmdWriter << std::endl;
 				break;
-			case START_ARITHMETIC_OPERATION:
-				break;
+			}
 			case END_ARITHMETIC_OPERATION:
 				CreateArithmeticExpression();
-				break;
-			case START_COND_EXPR:
 				break;
 			case END_COND_EXPR:
 				CreateConditionExpression();
@@ -303,10 +316,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case START_MAP_DECL:
 				break;
 			case END_MAP_DECL:
-				break;
-			case START_FUNC_CALL:
-				break;
-			case END_FUNC_CALL:
 				break;
 			case END_FUNCTION_ARGUMENTS:
 			{
@@ -354,14 +363,37 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case END_VAR_DESCRIBE:
 				RecognizeLeftPart();
 				break;
-			case START_VAR_DECL_RIGHT:
-				break;
-			case END_VAR_DECL_RIGHT:
+			case END_FOR_VAR_DESC:
 			{
+				curScope++;
+				cmdWriter << "for ";
+				AddVarToTable();
+				if (m_curVarTable.back().hasFirstDim)
+				{
+					m_error = true;
+					std::cout << "For initializer must be variable, not array";
+					break;
+				}
+				m_varStack.push(new VariableDescription(m_curVarTable.size() - 1)); //opasno !
 				break;
 			}
-			case LABEL_NONE:
+			case END_FOR_VAR_EXPR:
+			{
+				LogOpAction();
+				cmdWriter << " ";
 				break;
+			}
+			case END_FOR_COND:
+			{
+				LogBooleanExpression(m_boolStack.top());
+				m_boolStack.pop();
+				cmdWriter << std::endl;
+				break;
+			}
+			case END_FOR_CHANGE:
+			{				
+				break;
+			}
 			default:
 				break;
 			}
@@ -509,8 +541,6 @@ void CSemantics::LogOpAction()
 		cmdWriter << " ";
 		LogDescription(*desc);
 	}
-	
-	cmdWriter << std::endl;
 }
 
 void CSemantics::LogBooleanExpression(const BooleanComplexExpression &exp)
@@ -547,7 +577,7 @@ void CSemantics::LogDescription(const VariableDescription &desc)
 	if (desc.isFunctionCall) //func name args_count <args>
 	{
 		cmdWriter << "funcCall ";
-		cmdWriter << desc.func->funcPointer << " ";//m_funcTables[desc.func->funcPointer]->GetElement(0)->GetName() << " ";
+		cmdWriter << desc.func->funcPointer << " ";
 		size_t count = (*(desc.func->args)).size();
 		cmdWriter << count << " ";
 		for (size_t i = 0; i < count; ++i)
@@ -683,7 +713,6 @@ void CSemantics::CreateFunction()
 		LogVarType(elem->GetType());
 	}
 	cmdWriter << std::endl;
-	//m_elems.push((void*)(funcTable));
 }
 
 void CSemantics::CreateParamList()
@@ -1020,7 +1049,6 @@ void CSemantics::AddVarToTable()
 		cmdWriter << " sd ";
 		LogExpression(dim2);
 	}
-	cmdWriter << std::endl;
 
 	m_stack.pop();
 }
