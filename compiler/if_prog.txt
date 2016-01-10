@@ -1,5 +1,14 @@
 int calc(int a, float b)
 {
+	if (1 != 2)
+	{
+		cout << 1;
+		cout << '\'';
+	}
+	else
+	{
+		cout << 2;
+	}
 	float u[3];
 	u[1] = b + 1;
 	u[2] = a;
@@ -32,7 +41,11 @@ int main()
 	
 	if (a != b && (2 >= 67))
 	{
-		cout << "YES YOU ARE TRUE";
+		cout << "YES YOU ARE FALSE";
+	}
+	else
+	{
+		cout << "YES TOU ARE KES";
 	}
 	
 	cout << calc(1, 2 / 5.0);

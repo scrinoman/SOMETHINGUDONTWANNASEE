@@ -54,6 +54,32 @@ namespace CodeGenerator
             return res.ToArray();
         }
 
+        static char StringToChar(string s)
+        {
+            if (s.Length == 3)
+            {
+                return Convert.ToChar(s[1]);
+            }
+            else
+            {
+                //s[1] == '\\'
+                switch (s[2])
+                {
+                    case 'n': return '\n';
+                    case 't': return '\t';
+                    case 'r': return '\r';
+                    case 'a': return '\a';
+                    case 'b': return '\b';
+                    case 'f': return '\f';
+                    case 'v': return '\v';
+                    case '\'':
+                    case '\"':
+                    case '\\': return s[2];    
+                    default: return '\0';
+                }
+            }
+        }
+
         static OpCode GetOpCodeForOperator(string op)
         {
             if (op == "+") return OpCodes.Add;
@@ -269,7 +295,7 @@ namespace CodeGenerator
                                 }
                                 else
                                 {
-                                    gen.Emit(OpCodes.Ldc_I4, Convert.ToChar(commands[pointer + 1].Substring(1, 1)));
+                                    gen.Emit(OpCodes.Ldc_I4, StringToChar(commands[pointer + 1]));
                                     pointer += 2;
                                 }
                             }
@@ -347,6 +373,22 @@ namespace CodeGenerator
             }
         }
 
+        static void RemoveCurScopes()
+        {
+            for (int i = curScopes.Count - 1; i >= 0; --i)
+            {
+                if (curScopes[i] == curScope)
+                {
+                    curScopes.RemoveAt(i);
+                    curLocals.RemoveAt(i);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             string[] lines = System.IO.File.ReadAllLines("D:\\Code\\3_1\\git\\SOMETHINGUDONTWANNASEE\\Debug\\cmdLog.txt");
@@ -360,6 +402,7 @@ namespace CodeGenerator
             
             curLocals.Clear();
             Stack<Label> ifLabels = new Stack<Label>();
+            Stack<Label> ifElseLabels = new Stack<Label>();
             Stack<Label> whileLabels = new Stack<Label>();
             Stack<Label> whileLabelsExit = new Stack<Label>();
 
@@ -433,7 +476,7 @@ namespace CodeGenerator
                         string type = tokens[2];
                         Type curType = GetTypeByString(type);
                         builder.GetILGenerator().Emit(OpCodes.Call,
-                                     typeof(Console).GetMethod("WriteLine",
+                                     typeof(Console).GetMethod("Write",
                                      new Type[] { curType }));
                     }
 
@@ -512,20 +555,28 @@ namespace CodeGenerator
 
                     if (tokens[0] == "end_if")
                     {
+                        if (tokens[1] == "else")
+                        {
+                            Label elseLabel = builder.GetILGenerator().DefineLabel();
+                            ifElseLabels.Push(elseLabel);
+                            builder.GetILGenerator().Emit(OpCodes.Br, elseLabel);                            
+                        }
                         Label label = ifLabels.Pop();
                         builder.GetILGenerator().MarkLabel(label);
-                        for (int i = curScopes.Count - 1; i >= 0; --i)
-                        {
-                            if (curScopes[i] == curScope)
-                            {
-                                curScopes.RemoveAt(i);
-                                curLocals.RemoveAt(i);
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
+                        RemoveCurScopes();
+                        curScope--;
+                    }
+
+                    if (tokens[0] == "else")
+                    {
+                        curScope++;
+                    }
+
+                    if (tokens[0] == "end_else")
+                    {
+                        Label label = ifElseLabels.Pop();
+                        builder.GetILGenerator().MarkLabel(label);
+                        RemoveCurScopes();
                         curScope--;
                     }
 
@@ -549,19 +600,7 @@ namespace CodeGenerator
                         builder.GetILGenerator().Emit(OpCodes.Br, whileLabels.Peek());
                         Label label = whileLabelsExit.Pop();
                         builder.GetILGenerator().MarkLabel(label);
-
-                        for (int i = curScopes.Count - 1; i >= 0; --i)
-                        {
-                            if (curScopes[i] == curScope)
-                            {
-                                curScopes.RemoveAt(i);
-                                curLocals.RemoveAt(i);
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
+                        RemoveCurScopes();
                         curScope--;
                     }
                 }

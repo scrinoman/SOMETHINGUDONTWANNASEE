@@ -1,12 +1,6 @@
 ﻿#include "stdafx.h"
 #include "TokenAutomata.h"
 
-bool IsValidIntModifier(std::string s)
-{
-	std::transform(s.begin(), s.end(), s.begin(), tolower);
-	return (s == "u" || s == "l" || s == "lu" || s == "ul" || s == "ll" || s == "ull" || s == "lul" || s == "llu");
-}
-
 bool IsIntNumber(const std::string &s)
 {
 	size_t i = 0;
@@ -20,8 +14,7 @@ bool IsIntNumber(const std::string &s)
 	{
 		return true;
 	}
-	//std::string end = s.substr(i, s.length() - i);
-	//return IsValidIntModifier(end);
+
 	return false;
 }
 
@@ -97,7 +90,7 @@ bool IsChar(std::string const& s)
 	{
 		return false;
 	}
-	if (s.length() > 5 || s.length() < 3)
+	if (s.length() > 4 || s.length() < 3)
 	{
 		return false;
 	}

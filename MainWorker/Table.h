@@ -167,7 +167,7 @@ static const vector<CRuleTable> grammarTable = {
 	CRT({ CRR(")", { TokenType(24) }, 157, Labels::END_IF_DECL) }, TERMINAL),
 	CRT({ CRR("{", { TokenType(21) }, 158) }, TERMINAL),
 	CRT({ CRR("explist", { TokenType(15), TokenType(10), TokenType(6), TokenType(12), TokenType(1), TokenType(7), TokenType(8), TokenType(18), TokenType(14), TokenType(13), TokenType(16), TokenType(9), TokenType(22) }, 35, Labels::START_EXPLIST, Labels::END_EXPLIST) }),
-	CRT({ CRR("}", { TokenType(22) }, 0, Labels::LABEL_NONE, Labels::END_IF) }, TERMINAL),
+	CRT({ CRR("}", { TokenType(22) }, 160, Labels::LABEL_NONE, Labels::END_IF) }, TERMINAL),
 	CRT({ CRR("else", { TokenType(22), TokenType(15), TokenType(10), TokenType(6), TokenType(12), TokenType(1), TokenType(7), TokenType(8), TokenType(18), TokenType(14), TokenType(13), TokenType(16), TokenType(9), TokenType(11) }, 161) }, LAST_NONTERMINAL),
 	CRT({ CRR("else", { TokenType(22), TokenType(15), TokenType(10), TokenType(6), TokenType(12), TokenType(1), TokenType(7), TokenType(8), TokenType(18), TokenType(14), TokenType(13), TokenType(16), TokenType(9) }, 162), CRR("else", { TokenType(11) }, 163) }, LEFT_NONTERMINAL),
 	CRT({ CRR("empty", { TokenType(22), TokenType(15), TokenType(10), TokenType(6), TokenType(12), TokenType(1), TokenType(7), TokenType(8), TokenType(18), TokenType(14), TokenType(13), TokenType(16), TokenType(9), }, 0) }, EMPTY),

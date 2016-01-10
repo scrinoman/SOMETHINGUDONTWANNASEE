@@ -211,7 +211,7 @@ LEX_DLL_API LexerResult ParseFile(const string &fNameInput)
 			if (curTokens.size() > 0 && curTokens[curTokens.size() - 1].type == TokenType::ERROR)
 			{
 				isError = true;
-				errString = "Strange lexem at " + to_string(tokenGroup.row) +
+				errString = "Unknown lexem at " + to_string(tokenGroup.row) +
 					" (" + curTokens[curTokens.size() - 1].tokenString + ")";
 				break;
 			}

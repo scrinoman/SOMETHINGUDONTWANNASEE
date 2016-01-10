@@ -83,8 +83,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			{
 			case END_CODE:
 				break;
-			case FUNCTION_START:
-				break;
 			case FUNCTION_END:
 			{
 				if (functionHasReturn || m_funcTables.back()->GetElement(0)->GetType() == VarType::TYPE_VOID)
@@ -99,8 +97,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				}
 				break;
 			}	
-			case FUNCTION_START_DECL:
-				break;
 			case FUNCTION_END_DECL:
 				CreateFunction();
 				break;
@@ -194,11 +190,21 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case START_CONDITION:
 				break;
 			case END_CONDITION:
+			{
+				if (m_stack.top().label == Labels::START_ELSE)
+				{
+					cmdWriter << "end_else" << std::endl;
+				}
+				else
+				{
+					cmdWriter << "end_if end" << std::endl;
+				}
 				break;
+			}
 			case START_IF:
 				break;
 			case END_IF:
-				cmdWriter << "end_if" << std::endl;
+				//cmdWriter << "end_if" << std::endl;
 				break;
 			case END_IF_DECL:
 			{
@@ -211,7 +217,13 @@ void CSemantics::Push(CSemantics::StackType &&element)
 			case START_ELSE:
 				break;
 			case END_ELSE:
+			{
+				while (m_stack.top().label != Labels::START_ELSE)
+				{
+					m_stack.pop();
+				}
 				break;
+			}
 			case START_RETURN:
 				break;
 			case END_RETURN:
@@ -356,6 +368,10 @@ void CSemantics::Push(CSemantics::StackType &&element)
 		}
 		else
 		{
+			if (curElem.label == Labels::START_ELSE)
+			{
+				cmdWriter << "end_if else" << std::endl << "else" << std::endl;
+			}
 			m_stack.push(std::forward<CSemantics::StackType>(curElem));
 		}
 	}
