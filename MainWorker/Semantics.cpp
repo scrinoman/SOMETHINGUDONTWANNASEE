@@ -18,7 +18,6 @@ std::stack<BooleanComplexExpression> CSemantics::m_boolStack;
 std::stack<VariableDescription*> CSemantics::m_varStack;
 std::vector<VarElement> CSemantics::m_curVarTable;
 std::vector<VarElement> CSemantics::m_varTable;
-std::stack<VarType> CSemantics::m_types;
 std::vector<FunctionTable*> CSemantics::m_funcTables;
 std::ofstream CSemantics::cmdWriter("D:\\Code\\3_1\\git\\SOMETHINGUDONTWANNASEE\\Debug\\cmdLog.txt");
 int CSemantics::curScope = 0;
@@ -41,7 +40,8 @@ const std::set<TokenType> CSemantics::m_forbiddenSymbols = {
 	reservedTokens["else"],
 	reservedTokens["cin"],
 	reservedTokens["cout"],
-	reservedTokens["return"]
+	reservedTokens["return"],
+	reservedTokens["map"]
 };
 
 const std::map < Operator, int > CSemantics::m_operationPrior = {
@@ -169,7 +169,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				cmdWriter << "output ";
 				LogExpression(m_evalStack.top());
 				m_evalStack.pop();
-				m_types.pop();
 				cmdWriter << std::endl;
 				break;
 			}
@@ -184,8 +183,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				cmdWriter << std::endl;
 				break;
 			}
-			case START_FOR:
-				break;
 			case END_FOR:
 			{
 				cmdWriter << "end_for ";
@@ -276,7 +273,6 @@ void CSemantics::Push(CSemantics::StackType &&element)
 						LogVarType(exp.type);
 						LogExpression(exp);
 						m_evalStack.pop();
-						m_types.pop();
 						cmdWriter << std::endl;
 					}
 					else
@@ -313,10 +309,11 @@ void CSemantics::Push(CSemantics::StackType &&element)
 					m_stack.pop();
 				}
 				break;
-			case START_MAP_DECL:
-				break;
 			case END_MAP_DECL:
+			{
+				AddMapToTable();
 				break;
+			}
 			case END_FUNCTION_ARGUMENTS:
 			{
 				std::stack<FunctionArgument> tempStack;
@@ -324,9 +321,9 @@ void CSemantics::Push(CSemantics::StackType &&element)
 				{
 					if (m_stack.top().label == Labels::END_FUNCTION_ARG)
 					{
-						tempStack.emplace(m_evalStack.top(), m_types.top());
+						auto eval = m_evalStack.top();
+						tempStack.emplace(eval, eval.type);
 						m_evalStack.pop();
-						m_types.pop();
 					}
 					m_stack.pop();
 				}
@@ -515,18 +512,34 @@ std::string CSemantics::GetOPString(Operator op)
 
 void CSemantics::LogOpAction()
 {
-	cmdWriter << "assign ";
 	auto desc = m_varStack.top();
 	m_varStack.pop();
+	auto exp = m_evalStack.top();
+
+	if (!IsCompatibleTypes(m_curVarTable[desc->pointer].type, exp.type))
+	{
+		m_error = true;
+		std::cout << "Incompatible type for " <<  m_curVarTable[desc->pointer].name << std::endl;
+		return;
+	}
+
+	cmdWriter << "assign ";
 	if (desc->hasFirstDim)
 	{
-		if (desc->hasSecondDim)
+		if (m_curVarTable[desc->pointer].isMap)
 		{
-			cmdWriter << "2 ";
+			cmdWriter << "map ";
 		}
 		else
 		{
-			cmdWriter << "1 ";
+			if (desc->hasSecondDim)
+			{
+				cmdWriter << "2 ";
+			}
+			else
+			{
+				cmdWriter << "1 ";
+			}
 		}
 		LogDescription(*desc);
 		cmdWriter << " ";
@@ -594,7 +607,14 @@ void CSemantics::LogDescription(const VariableDescription &desc)
 		if (desc.hasSecondDim) dim++;
 		cmdWriter << dim << " ";
 		cmdWriter << desc.pointer << " ";
-		LogVarType(m_curVarTable[desc.pointer].type);
+		if (m_curVarTable[desc.pointer].isMap)
+		{
+			cmdWriter << "map ";
+		}
+		else
+		{
+			LogVarType(m_curVarTable[desc.pointer].type);
+		}
 		if (desc.hasFirstDim)
 		{
 			cmdWriter << "fd ";
@@ -796,16 +816,14 @@ void CSemantics::RecognizeArrayPart()
 		exp2 = m_evalStack.top();
 		m_evalStack.pop();
 		m_stack.pop();
-		secondType = m_types.top();
-		m_types.pop();
+		secondType = exp2.type;
 	}
 
 	m_stack.pop();
 	hasFirst = true;
 	exp1 = m_evalStack.top();
 	m_evalStack.pop();
-	firstType = m_types.top();
-	m_types.pop();
+	firstType = exp1.type;
 
 	int pointer = GetVarInTable(m_stack.top().token.tokenString);
 	if (m_error)
@@ -839,8 +857,6 @@ void CSemantics::RecognizeArrayPart()
 											new VariableDescription(pointer, exp1);
 	m_varStack.push(desc);
 	m_stack.pop();
-	/*LogDescription(*desc);
-	cmdWriter << std::endl;*/
 }
 
 void CSemantics::RecognizeFuncCall()
@@ -947,6 +963,67 @@ void CSemantics::RecognizeLeftPart()
 	RecognizeSimpleVar();
 }
 
+VarType CSemantics::GetVarType(TokenType type)
+{
+	switch (type)
+	{
+	case TokenType::CHAR:
+		return VarType::TYPE_CHAR;
+		break;
+	case TokenType::STR:
+		return VarType::TYPE_STRING;
+		break;
+	case TokenType::FLOAT:
+		return VarType::TYPE_FLOAT;
+		break;
+	case TokenType::INT:
+		return VarType::TYPE_INT;
+		break;
+	default:
+		assert(false);
+		break;
+	}
+
+	return VarType::TYPE_VOID;
+}
+
+void CSemantics::AddMapToTable()
+{
+	VarElement newVarElement;
+	auto id = m_stack.top().token.tokenString;
+	newVarElement.name = id;
+	for (size_t i = 0; i < m_curVarTable.size(); ++i)
+	{
+		if (m_curVarTable[i].name == id)
+		{
+			m_error = true;
+			std::cout << "Already defined variable " << id << std::endl;
+			return;
+		}
+	}
+	newVarElement.scope = curScope;
+	m_stack.pop();
+	m_stack.pop();//skip >
+	auto valueType = m_stack.top().token.type;
+
+	newVarElement.type = GetVarType(valueType);
+	m_stack.pop();
+	auto keyType = m_stack.top().token.type;
+	newVarElement.hasFirstDim = true;
+	newVarElement.firstDimType = GetVarType(keyType);
+	newVarElement.isMap = true;
+
+	m_stack.pop();
+	m_stack.pop();//skip <
+	
+	m_curVarTable.push_back(newVarElement);
+	
+	cmdWriter << "new_map ";
+	LogVarType(newVarElement.firstDimType);
+	LogVarType(newVarElement.type);
+	cmdWriter << std::endl;
+}
+
 void CSemantics::AddVarToTable()
 {
 	auto top = m_stack.top();
@@ -961,7 +1038,7 @@ void CSemantics::AddVarToTable()
 			newVarElement.hasSecondDim = true;
 			dim2 = m_evalStack.top();
 			m_evalStack.pop();
-			auto curType = m_types.top();
+			auto curType = dim2.type;
 			if (curType != VarType::TYPE_INT)
 			{
 				m_error = true;
@@ -969,7 +1046,6 @@ void CSemantics::AddVarToTable()
 				return;
 			}
 			newVarElement.secondDimType = curType;
-			m_types.pop();
 			m_stack.pop();
 
 			top = m_stack.top();
@@ -981,7 +1057,7 @@ void CSemantics::AddVarToTable()
 			dim1 = m_evalStack.top();
 			m_evalStack.pop();
 			newVarElement.hasFirstDim = true;
-			auto curType = m_types.top();
+			auto curType = dim1.type;
 			if (curType != VarType::TYPE_INT)
 			{
 				m_error = true;
@@ -989,7 +1065,6 @@ void CSemantics::AddVarToTable()
 				return;
 			}
 			newVarElement.firstDimType = curType;
-			m_types.pop();
 			m_stack.pop();
 
 			top = m_stack.top();
@@ -1032,7 +1107,7 @@ void CSemantics::AddVarToTable()
 
 	newVarElement.type = varType;
 	
-	m_varTable.push_back(newVarElement);
+	//m_varTable.push_back(newVarElement);
 	m_curVarTable.push_back(newVarElement);
 
 	cmdWriter << "new_var ";
@@ -1325,7 +1400,6 @@ void CSemantics::CreateArithmeticExpression()
 		newExpr.type = curTypes.top();
 		m_evalStack.push(newExpr);
 		assert(curTypes.size() == 1);
-		m_types.push(curTypes.top());
 	}
 }
 
@@ -1513,9 +1587,6 @@ void CSemantics::CreateConditionExpression()
 				newExpr.push_back(evalStack);
 				stackForExpressions.pop();
 
-				auto type = m_types.top();
-				m_types.pop();
-
 				curTypes.push(evalStack.type);
 			}
 		}
@@ -1586,6 +1657,5 @@ void CSemantics::CreateConditionExpression()
 	{
 		m_boolStack.push(newExpr);
 		assert(curTypes.size() == 1);
-		m_types.push(curTypes.top());
 	}
 }

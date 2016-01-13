@@ -50,6 +50,8 @@ private:
 	static void CreateParamList();
 	static void CreateParam();
 	static void AddVarToTable();
+	static void AddMapToTable();
+	static VarType GetVarType(TokenType type);
 	static void RecognizeLeftPart();
 	static void RecognizeArrayPart();
 	static void RecognizeFuncCall();
@@ -59,7 +61,6 @@ private:
 	static std::stack<ComplexExpression> m_evalStack;
 	static std::stack<BooleanComplexExpression> m_boolStack;
 	static std::stack<VariableDescription*> m_varStack;
-	static std::stack<VarType> m_types;
 	static std::vector<VarElement> m_curVarTable;
 	static std::vector<VarElement> m_varTable;
 	static std::vector<FunctionTable*> m_funcTables;

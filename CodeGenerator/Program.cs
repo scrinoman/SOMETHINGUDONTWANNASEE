@@ -11,6 +11,7 @@ namespace CodeGenerator
     class Program
     {
         static List<LocalBuilder> curLocals = new List<LocalBuilder>();
+        static List<Type> curTypes = new List<Type>();
         static List<int> curScopes = new List<int>();
         static List<MethodBuilder> methods = new List<MethodBuilder>();
         static List<int> methodParamCount = new List<int>();
@@ -204,7 +205,6 @@ namespace CodeGenerator
             int dim = Convert.ToInt32(commands[pointer++].ToString());
             int varPointer = Convert.ToInt32(commands[pointer++].ToString());
             string strType = commands[pointer++];
-            Type type = GetTypeByString(strType);
             int curVarPointer = varPointer - methodParamCount[methodParamCount.Count - 1];
             if (dim == 0)
             {
@@ -225,7 +225,15 @@ namespace CodeGenerator
                     pointer++;
                     CreateExpression(gen, commands, ref pointer);
 
-                    gen.Emit(OpCodes.Ldelem, type);
+                    if (strType == "map")
+                    {
+                        gen.Emit(OpCodes.Callvirt, curTypes[curVarPointer].GetMethod("get_Item", 
+                                                    new Type[] { curTypes[curVarPointer].GetGenericArguments()[0] }));
+                    }
+                    else
+                    {
+                        gen.Emit(OpCodes.Ldelem, GetTypeByString(strType));
+                    }
                 }
                 else
                 {
@@ -344,6 +352,7 @@ namespace CodeGenerator
             if (args[startPointer + 2] == "0")
             {
                 curLocals.Add(gen.DeclareLocal(GetTypeByString(args[startPointer + 1])));
+                curTypes.Add(GetTypeByString(args[startPointer + 1]));
                 curScopes.Add(curScope);
             }
             else
@@ -356,6 +365,7 @@ namespace CodeGenerator
                     gen.Emit(OpCodes.Newarr, GetTypeByString(args[startPointer + 1]));
                     gen.Emit(OpCodes.Stloc, arr);
                     curLocals.Add(arr);
+                    curTypes.Add(GetTypeByString(args[startPointer + 1], true));
                     curScopes.Add(curScope);
                 }
                 else
@@ -369,9 +379,24 @@ namespace CodeGenerator
                     gen.Emit(OpCodes.Newobj, arrType.GetConstructor(new Type[] {typeof(int), typeof(int)}));
                     gen.Emit(OpCodes.Stloc, arr);
                     curLocals.Add(arr);
+                    curTypes.Add(arrType);
                     curScopes.Add(curScope);
                 }
             }
+        }
+
+        static void DeclareMap(ILGenerator gen, string[] args)
+        {
+            var keyType = GetTypeByString(args[1]);
+            var valType = GetTypeByString(args[2]);
+
+            Type type = typeof(SortedDictionary<,>).MakeGenericType(new Type[] {keyType, valType });
+            gen.Emit(OpCodes.Newobj, type.GetConstructor(new Type[] {}));
+            var arr = gen.DeclareLocal(type);
+            gen.Emit(OpCodes.Stloc, arr);
+            curLocals.Add(arr);
+            curTypes.Add(type);
+            curScopes.Add(curScope);
         }
 
         static void RemoveCurScopes()
@@ -382,6 +407,7 @@ namespace CodeGenerator
                 {
                     curScopes.RemoveAt(i);
                     curLocals.RemoveAt(i);
+                    curTypes.RemoveAt(i);
                 }
                 else
                 {
@@ -401,7 +427,6 @@ namespace CodeGenerator
             TypeBuilder prog = module.DefineType("Program", TypeAttributes.Class | TypeAttributes.Public);
             builder = null;
 
-            curLocals.Clear();
             Stack<Label> ifLabels = new Stack<Label>();
             Stack<Label> ifElseLabels = new Stack<Label>();
             Stack<Label> whileLabels = new Stack<Label>();
@@ -437,6 +462,7 @@ namespace CodeGenerator
                 {
                     builder.GetILGenerator().Emit(OpCodes.Ret);
                     curLocals.Clear();
+                    curTypes.Clear();
                     curScope = 0;
                     curScopes.Clear();
                 }
@@ -444,6 +470,11 @@ namespace CodeGenerator
                 if (tokens[0] == "new_var")
                 {
                     DeclareVar(builder.GetILGenerator(), tokens, 0);
+                }
+
+                if (tokens[0] == "new_map")
+                {
+                    DeclareMap(builder.GetILGenerator(), tokens);
                 }
 
                 if (tokens[0] == "assign")
@@ -464,9 +495,18 @@ namespace CodeGenerator
                         }
                         else
                         {
-                            string arrType = tokens[5];
-                            builder.GetILGenerator().Emit(OpCodes.Call, GetTypeByString(arrType, true, true).GetMethod("Set",
-                                                        new Type[] { typeof(int), typeof(int), GetTypeByString(arrType) }));
+                            if (tokens[1] == "2")
+                            {
+                                string arrType = tokens[5];
+                                builder.GetILGenerator().Emit(OpCodes.Call, GetTypeByString(arrType, true, true).GetMethod("Set",
+                                                            new Type[] { typeof(int), typeof(int), GetTypeByString(arrType) }));
+                            }
+                            else
+                            {
+                                int p = Convert.ToInt32(tokens[4]) - methodParamCount[methodParamCount.Count - 1];
+                                builder.GetILGenerator().Emit(OpCodes.Callvirt, curTypes[p].GetMethod("set_Item",
+                                                new Type[] { curTypes[p].GetGenericArguments()[0], curTypes[p].GetGenericArguments()[1] }));
+                            }
                         }
                     }
                 }

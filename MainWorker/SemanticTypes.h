@@ -120,6 +120,7 @@ enum struct Operator
 
 struct VarElement
 {
+	bool isMap = false;
 	std::string name = "";
 	VarType type = VarType::TYPE_VOID;
 	int scope = -1;
