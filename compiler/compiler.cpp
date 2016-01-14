@@ -86,8 +86,8 @@ bool RunCodeGenerator(const std::string &exeName)
 	stInfo.cb = sizeof(stInfo);
 	std::wstring ws(exeName.begin(), exeName.end());
 
-	if (CreateProcess(L"D:\\Code\\3_1\\git\\SOMETHINGUDONTWANNASEE\\Debug\\CodeGenerator.exe", 
-		L"D:\\Code\\3_1\\git\\SOMETHINGUDONTWANNASEE\\Debug\\CodeGenerator.exe wtf",//&ws[0],
+	if (CreateProcess(L"CodeGenerator.exe", 
+		L"CodeGenerator.exe wtf",//&ws[0],
 		NULL, NULL, FALSE, 0, NULL, NULL,
 		&stInfo, &procInfo))
 	{

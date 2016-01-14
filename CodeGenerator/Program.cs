@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Globalization;
@@ -167,6 +166,10 @@ namespace CodeGenerator
             string strType = commands[pointer++];
             Type type = GetTypeByString(strType);
             int curVarPointer = varPointer - methodParamCount[methodParamCount.Count - 1];
+            if (strType == "map")
+            {
+                type = curTypes[curVarPointer].GetGenericArguments()[1];
+            }
             if (dim == 0)
             {
                 if (curVarPointer >= 0)
@@ -222,7 +225,7 @@ namespace CodeGenerator
                 if (dim == 1)
                 {
                     gen.Emit(OpCodes.Ldloc, curLocals[curVarPointer]);
-                    pointer++;
+                    bool isStringRef = commands[pointer++] == "str_ref";
                     CreateExpression(gen, commands, ref pointer);
 
                     if (strType == "map")
@@ -232,7 +235,14 @@ namespace CodeGenerator
                     }
                     else
                     {
-                        gen.Emit(OpCodes.Ldelem, GetTypeByString(strType));
+                        if (isStringRef)
+                        {
+                            gen.Emit(OpCodes.Callvirt, typeof(string).GetMethod("get_Chars", new Type[] { typeof(int) }));
+                        }
+                        else
+                        {
+                            gen.Emit(OpCodes.Ldelem, GetTypeByString(strType));
+                        }
                     }
                 }
                 else
@@ -240,9 +250,26 @@ namespace CodeGenerator
                     gen.Emit(OpCodes.Ldloc, curLocals[varPointer]);
                     pointer++;
                     CreateExpression(gen, commands, ref pointer);
-                    pointer++;
-                    CreateExpression(gen, commands, ref pointer);
-                    gen.Emit(OpCodes.Call, GetTypeByString(strType, true, true).GetMethod("Get", new Type[] {typeof(int), typeof(int)}));
+                    bool isStringRef = commands[pointer++] == "str_ref";
+                    if (isStringRef)
+                    {
+                        if (strType == "map")
+                        {
+                            gen.Emit(OpCodes.Callvirt, curTypes[curVarPointer].GetMethod("get_Item",
+                                                        new Type[] { curTypes[curVarPointer].GetGenericArguments()[0] }));
+                        }
+                        else
+                        {
+                            gen.Emit(OpCodes.Ldelem, typeof(string));
+                        }
+                        CreateExpression(gen, commands, ref pointer);
+                        gen.Emit(OpCodes.Callvirt, typeof(string).GetMethod("get_Chars", new Type[] { typeof(int) }));
+                    }
+                    else
+                    {
+                        CreateExpression(gen, commands, ref pointer);
+                        gen.Emit(OpCodes.Call, GetTypeByString(strType, true, true).GetMethod("Get", new Type[] { typeof(int), typeof(int) }));
+                    }
                 }
             }
         }
@@ -418,7 +445,7 @@ namespace CodeGenerator
 
         static void Main(string[] args)
         {
-            string[] lines = File.ReadAllLines("D:\\Code\\3_1\\git\\SOMETHINGUDONTWANNASEE\\Debug\\cmdLog.txt");
+            string[] lines = File.ReadAllLines("cmdLog.txt");
 
             AssemblyBuilder build = AppDomain.CurrentDomain.DefineDynamicAssembly(
                 new System.Reflection.AssemblyName("CustomCompiler program"),
@@ -568,9 +595,18 @@ namespace CodeGenerator
                         }
                         else
                         {
-                            string arrType = tokens[5];
-                            builder.GetILGenerator().Emit(OpCodes.Call, GetTypeByString(arrType, true, true).GetMethod("Set",
-                                                        new Type[] { typeof(int), typeof(int), GetTypeByString(arrType) }));
+                            if (tokens[1] == "2")
+                            {
+                                string arrType = tokens[5];
+                                builder.GetILGenerator().Emit(OpCodes.Call, GetTypeByString(arrType, true, true).GetMethod("Set",
+                                                            new Type[] { typeof(int), typeof(int), GetTypeByString(arrType) }));
+                            }
+                            else
+                            {
+                                int p = Convert.ToInt32(tokens[4]) - methodParamCount[methodParamCount.Count - 1];
+                                builder.GetILGenerator().Emit(OpCodes.Callvirt, curTypes[p].GetMethod("set_Item",
+                                                new Type[] { curTypes[p].GetGenericArguments()[0], curTypes[p].GetGenericArguments()[1] }));
+                            }
                         }
                     }
                 }

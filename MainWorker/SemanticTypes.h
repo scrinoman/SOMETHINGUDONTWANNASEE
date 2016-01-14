@@ -232,6 +232,7 @@ struct VariableDescription
 
 	int pointer = -1;
 
+	bool isStringDereference = false;
 	bool hasFirstDim = false, hasSecondDim = false;
 	ComplexExpression firstDim, secondDim;
 

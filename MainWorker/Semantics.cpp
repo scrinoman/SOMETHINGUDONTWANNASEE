@@ -19,7 +19,7 @@ std::stack<VariableDescription*> CSemantics::m_varStack;
 std::vector<VarElement> CSemantics::m_curVarTable;
 std::vector<VarElement> CSemantics::m_varTable;
 std::vector<FunctionTable*> CSemantics::m_funcTables;
-std::ofstream CSemantics::cmdWriter("D:\\Code\\3_1\\git\\SOMETHINGUDONTWANNASEE\\Debug\\cmdLog.txt");
+std::ofstream CSemantics::cmdWriter("cmdLog.txt");
 int CSemantics::curScope = 0;
 bool CSemantics::functionHasReturn = false;
 bool CSemantics::hasEntryPoint = false;
@@ -153,7 +153,14 @@ void CSemantics::Push(CSemantics::StackType &&element)
 					}
 					else
 					{
-						cmdWriter << "1 ";
+						if (m_curVarTable[desc->pointer].isMap)
+						{
+							cmdWriter << "map ";
+						}
+						else
+						{
+							cmdWriter << "1 ";
+						}
 					}
 				}
 				else
@@ -523,6 +530,13 @@ void CSemantics::LogOpAction()
 		return;
 	}
 
+	if (desc->isStringDereference)
+	{
+		m_error = true;
+		std::cout << "Assignment to string element" << std::endl;
+		return;
+	}
+
 	cmdWriter << "assign ";
 	if (desc->hasFirstDim)
 	{
@@ -617,13 +631,27 @@ void CSemantics::LogDescription(const VariableDescription &desc)
 		}
 		if (desc.hasFirstDim)
 		{
-			cmdWriter << "fd ";
+			if (desc.isStringDereference && dim == 1)
+			{
+				cmdWriter << "str_ref ";
+			}
+			else
+			{
+				cmdWriter << "fd ";
+			}
 			LogExpression(desc.firstDim);
 		}
 
 		if (desc.hasSecondDim)
 		{
-			cmdWriter << " sd ";
+			if (desc.isStringDereference)
+			{
+				cmdWriter << " str_ref ";
+			}
+			else
+			{
+				cmdWriter << " sd ";
+			}
 			LogExpression(desc.secondDim);
 		}
 	}
@@ -808,6 +836,7 @@ void CSemantics::RecognizeArrayPart()
 {
 	auto top = m_stack.top();
 	bool hasFirst = false, hasSecond = false;
+	int dim = 0;
 	ComplexExpression exp1, exp2;
 	VarType firstType, secondType;
 	if (top.label == Labels::START_ARRAY_SECOND_DIM)
@@ -831,22 +860,32 @@ void CSemantics::RecognizeArrayPart()
 		return;
 	}
 
-	if ((m_curVarTable[pointer].hasSecondDim && !hasSecond) || (!m_curVarTable[pointer].hasSecondDim && hasSecond) || 
-		(!m_curVarTable[pointer].hasFirstDim && m_curVarTable[pointer].type != VarType::TYPE_STRING))
+	bool isString = m_curVarTable[pointer].type == VarType::TYPE_STRING;
+	if ((m_curVarTable[pointer].hasSecondDim && !hasSecond) || (!m_curVarTable[pointer].hasSecondDim && hasSecond && !isString) || 
+		(!m_curVarTable[pointer].hasFirstDim && !isString))
 	{
 		m_error = true;
 		std::cout << "Dimensions don't match for variable " << m_stack.top().token.tokenString << std::endl;
 		return;
 	}
 
-	if (m_curVarTable[pointer].firstDimType != firstType && m_curVarTable[pointer].type != VarType::TYPE_STRING)
+	int strDim = 0;
+	if (m_curVarTable[pointer].hasFirstDim) strDim++;
+	if (m_curVarTable[pointer].hasSecondDim) strDim++;
+
+	if (hasFirst) dim++;
+	if (hasSecond) dim++;
+
+	if ((m_curVarTable[pointer].firstDimType != firstType && m_curVarTable[pointer].type != VarType::TYPE_STRING) || 
+		(firstType != VarType::TYPE_INT && isString))
 	{
 		m_error = true;
 		std::cout << "Wrong type for first dimension " << m_stack.top().token.tokenString << std::endl;
 		return;
 	}
 
-	if (hasSecond && m_curVarTable[pointer].secondDimType != secondType)
+	if ((hasSecond && m_curVarTable[pointer].secondDimType != secondType && m_curVarTable[pointer].type != VarType::TYPE_STRING) ||
+		(hasSecond && isString && (secondType != VarType::TYPE_INT || strDim == 0)))
 	{
 		m_error = true;
 		std::cout << "Wrong type for second dimension " << m_stack.top().token.tokenString << std::endl;
@@ -855,6 +894,16 @@ void CSemantics::RecognizeArrayPart()
 
 	VariableDescription *desc = hasSecond ? new VariableDescription(pointer, exp1, exp2) : 
 											new VariableDescription(pointer, exp1);
+
+
+	if (isString)
+	{
+		if (dim > strDim)
+		{
+			desc->isStringDereference = true;
+		}
+	}
+
 	m_varStack.push(desc);
 	m_stack.pop();
 }
@@ -1340,7 +1389,14 @@ void CSemantics::CreateArithmeticExpression()
 				}
 				else
 				{
-					curTypes.push(m_curVarTable[varPoint->pointer].type);
+					if (varPoint->isStringDereference)
+					{
+						curTypes.push(VarType::TYPE_CHAR);
+					}
+					else
+					{
+						curTypes.push(m_curVarTable[varPoint->pointer].type);
+					}
 				}
 			}
 		}

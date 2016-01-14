@@ -1,0 +1,12 @@
+void main()
+{
+	string s[2][1];
+	s[0][0] = "dddd";
+	s[1][0] = "eeee";
+	cout << s[1][0];
+	cout << '\n';
+	map<int, string> ss;
+	ss[0] = "ddd";
+	cout << ss[0][2];
+	cout << '\n';
+}

@@ -11,5 +11,8 @@ void main()
 	{
 		cout << s[i];
 		cout << '\n';
-	} 
+	}
+	map <string, float> sf;
+	cin >> sf["dsd"];
+	cout << sf["dsd"];
 }
