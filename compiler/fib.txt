@@ -1,0 +1,29 @@
+int fib(int num)
+{
+	if (num == 0)
+	{
+		return 0;
+	}
+
+	if (num == 1)
+	{
+		return 1;
+	}
+	
+	return fib(num - 1) + fib(num - 2);
+}
+
+void main()
+{
+	int count = 0;
+	cout << "Input fibonnaci index - ";
+	cin >> count;
+	if (count >= 0)
+	{
+		cout << fib(count);
+	}
+	else
+	{
+		cout << "Index must be > 0";
+	}
+}
